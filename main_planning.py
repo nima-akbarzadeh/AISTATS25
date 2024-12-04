@@ -25,7 +25,7 @@ def main():
     #     'f_type_set': ['hom'], # homogeneous reward functions
     #     't_type_set': [3], # 3 is for the third structured model, 13 is for the third model of the clinical example
     #     'u_type_set': [(2, 8)],
-    #     'threshold_set': [np.round(0.1 * n, 1) for n in range(1, 10)],
+    #     'threshold_set': [np.round(0.1 * n, 1) for n in range(5, 6)],
     #     'fraction_set': [0.5]
     # }
 

@@ -182,13 +182,16 @@ class RiskAwareWhittle:
             all_total_rewards = []
 
             prev_rewards_by_t = set([0.0])
-            for t in range(self.horizon):
-
-                if len(self.rewards.shape) == 3:
-                    current_rewards = self.rewards[:, :, a]
-                    current_rewards = current_rewards.flatten()
+            for t in range(self.horizon+1):
+                
+                if t == 0:
+                    current_rewards = [0]
                 else:
-                    current_rewards = self.rewards[:, a]
+                    if len(self.rewards.shape) == 3:
+                        current_rewards = self.rewards[:, :, a]
+                        current_rewards = current_rewards.flatten()
+                    else:
+                        current_rewards = self.rewards[:, a]
                 all_total_rewards_by_t = set()
                 for prev_sum in prev_rewards_by_t:
                     for reward in current_rewards:
@@ -197,7 +200,7 @@ class RiskAwareWhittle:
                 arm_n_realize.append(len(all_total_rewards_by_t))
                 prev_rewards_by_t = set(all_total_rewards_by_t)
 
-                if t == self.horizon - 1:
+                if t == self.horizon:
                     all_total_rewards = all_total_rewards_by_t
 
             self.n_augment[a] = len(all_total_rewards)
@@ -338,7 +341,6 @@ class RiskAwareWhittle:
                         else:
                             next_cum_rew = self.all_rews[arm][l] + self.rewards[x, arm]
                         nxt_l = self.all_rews[arm].index(np.round(next_cum_rew, 2))
-
                         # nxt_l = max(0, min(self.n_augment[arm] - 1, l + x))
 
                         Q[l, x, t, act] = np.round(- penalty * act / self.horizon + np.dot(V[nxt_l, :, t + 1], self.transition[x, :, act, arm]), self.digits + 1)
@@ -352,7 +354,7 @@ class RiskAwareWhittle:
                         pi[l, x, t] = 1
 
             t = t - 1
-
+        
         return pi, V, Q
 
     @staticmethod
