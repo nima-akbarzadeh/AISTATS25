@@ -135,8 +135,7 @@ def process_and_plot(prob_err, indx_err, perf_ref, perf_lrn, suffix, path, key_v
 
 
 def run_learning_combination(params):
-    nt, ns, nc, ft, tt, ut, uo, th, fr, method, l_episodes, n_episodes, n_iterations, PATH = params
-    na = nc * ns
+    nt, ns, na, ft, tt, ut, uo, th, nc, method, l_episodes, n_episodes, n_iterations, PATH = params
     ftype = numpy.ones(na, dtype=numpy.int32) if ft == 'hom' else 1 + numpy.arange(na)
 
     if tt == 0:
@@ -158,25 +157,24 @@ def run_learning_combination(params):
     M = MarkovDynamics(na, ns, prob_remain, tt, True)
     thresh = th * numpy.ones(na)
 
-    nch = max(1, int(round(fr * na)))
     initial_states = (ns - 1) * numpy.ones(na, dtype=numpy.int32)
 
     prob_err_ln, indx_err_ln, _, obj_ln, _, obj_n = ProcessMulti_LearnTSRB(
-        n_iterations, l_episodes, n_episodes, nt, ns, na, nch,
+        n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
         thresh, tt, True, method, r_vals, M.transitions,
         initial_states, ut, uo, False, nt
     )
     prob_err_lu, indx_err_lu, _, obj_lu, _, obj_u = ProcessMulti_LearnNlTSRB(
-        n_iterations, l_episodes, n_episodes, nt, ns, na, nch,
+        n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
         thresh, tt, True, method, r_vals_nl, M.transitions,
         initial_states, ut, uo, False, nt
     )
     prob_err_lr, indx_err_lr, _, obj_lr, _, obj_r = ProcessMulti_LearnSafeTSRB(
-        n_iterations, l_episodes, n_episodes, nt, ns, na, nch,
+        n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
         thresh, tt, True, method, r_vals, M.transitions,
         initial_states, ut, uo, False, nt
     )
-    key_value = f'nt{nt}_ns{ns}_nc{nc}_ft{ft}_tt{tt}_ut{ut}_uo{uo}_th{th}_fr{fr}'
+    key_value = f'nt{nt}_ns{ns}_nc{nc}_ft{ft}_tt{tt}_ut{ut}_uo{uo}_th{th}_nc{nc}'
 
     process_and_plot(prob_err_ln, indx_err_ln, obj_n, obj_ln, 'lw', PATH, key_value)
     process_and_plot(prob_err_lu, indx_err_lu, obj_u, obj_lu, 'ln', PATH, key_value)

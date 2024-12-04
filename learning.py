@@ -9,7 +9,7 @@ import joblib
 import time
 
 
-def Process_LearnRAWIP_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
+def Process_LearnSafeTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
                       t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, max_wi):
     n_trials_safety = n_states * n_steps
 
@@ -75,7 +75,7 @@ def Process_LearnRAWIP_iteration(i, l_episodes, n_episodes, n_steps, n_states, n
     return results
 
 
-def Process_LearnRAWIP(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
+def Process_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
                           t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, max_wi):
     """
     Processes multiple iterations of Safe Learning without multiprocessing.
@@ -95,7 +95,7 @@ def Process_LearnRAWIP(n_iterations, l_episodes, n_episodes, n_steps, n_states, 
         print(f"Processing iteration {n + 1} of {n_iterations}...")
 
         # Call the `process_iteration` function for this iteration
-        results = Process_LearnRAWIP_iteration(
+        results = Process_LearnSafeTSRB_iteration(
             n, l_episodes=l_episodes, n_episodes=n_episodes, n_steps=n_steps,
             n_states=n_states, n_arms=n_arms, n_choices=n_choices, thresholds=thresholds, t_type=t_type,
             t_increasing=t_increasing, method=method, tru_rew=tru_rew, tru_dyn=tru_dyn,
@@ -112,7 +112,7 @@ def Process_LearnRAWIP(n_iterations, l_episodes, n_episodes, n_steps, n_states, 
 
     # Save results if required
     if save_data:
-        filename = f'./output-learn-finite/rawip_{n_episodes}{n_steps}{n_states}{t_type}{u_type}{n_choices}{thresholds[0]}{u_type}{u_order}.joblib'
+        filename = f'./output-learn-finite/safetsrb__ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib'
         joblib.dump(
             [all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives,
              all_plan_rewards, all_plan_objectives],
@@ -123,7 +123,7 @@ def Process_LearnRAWIP(n_iterations, l_episodes, n_episodes, n_steps, n_states, 
     return all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives, all_plan_rewards, all_plan_objectives
 
 
-def ProcessMulti_LearnRAWIP(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
+def ProcessMulti_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
                                t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, max_wi):
     num_workers = cpu_count() - 1
 
@@ -136,7 +136,7 @@ def ProcessMulti_LearnRAWIP(n_iterations, l_episodes, n_episodes, n_steps, n_sta
 
     # Use multiprocessing pool
     with Pool(num_workers) as pool:
-        results = pool.starmap(Process_LearnRAWIP_iteration, args)
+        results = pool.starmap(Process_LearnSafeTSRB_iteration, args)
 
     # Aggregate results
     all_learn_transitionerrors = np.stack([res["learn_transitionerrors"] for res in results])
@@ -148,12 +148,12 @@ def ProcessMulti_LearnRAWIP(n_iterations, l_episodes, n_episodes, n_steps, n_sta
 
     if save_data:
         joblib.dump([all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives, all_plan_rewards, all_plan_objectives],
-                    f'./output-learn-finite/rawip_{n_episodes}{n_steps}{n_states}{t_type}{u_type}{n_choices}{thresholds[0]}{u_type}{u_order}.joblib')
+                    f'./output-learn-finite/safetsrb__ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib')
 
     return all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives, all_plan_rewards, all_plan_objectives
 
 
-def Process_LearnWIP_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
+def Process_LearnTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
                                 t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, max_wi):
     n_trials_safety = n_states * n_steps
 
@@ -209,7 +209,7 @@ def Process_LearnWIP_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_a
     return results
 
 
-def Process_LearnWIP(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
+def Process_LearnTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
                       t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, max_wi):
     # Storage for aggregated results
     all_plan_rewards = np.zeros((n_iterations, l_episodes, n_arms))
@@ -222,7 +222,7 @@ def Process_LearnWIP(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_
 
     for n in range(n_iterations):
         print(f"Processing iteration {n + 1} of {n_iterations}...")
-        results = Process_LearnWIP_iteration(
+        results = Process_LearnTSRB_iteration(
             n, l_episodes=l_episodes, n_episodes=n_episodes, n_steps=n_steps, n_states=n_states, n_arms=n_arms,
             n_choices=n_choices, thresholds=thresholds, t_type=t_type, t_increasing=t_increasing, method=method,
             tru_rew=tru_rew, tru_dyn=tru_dyn, initial_states=initial_states, u_type=u_type, u_order=u_order, max_wi=max_wi
@@ -237,7 +237,7 @@ def Process_LearnWIP(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_
         all_learn_probs[n] = results["learn_probs"]
 
     if save_data:
-        filename = f'./output-learn-finite/wip_{n_episodes}{n_steps}{n_states}{t_type}{u_type}{n_choices}{thresholds[0]}{u_type}{u_order}.joblib'
+        filename = f'./output-learn-finite/tsrb__ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib'
         joblib.dump([all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives,
                      all_plan_rewards, all_plan_objectives],
                     filename)
@@ -246,7 +246,7 @@ def Process_LearnWIP(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_
     return all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives, all_plan_rewards, all_plan_objectives
 
 
-def ProcessMulti_LearnWIP(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
+def ProcessMulti_LearnTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
                            t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, max_wi):
     num_workers = cpu_count() - 1
 
@@ -259,7 +259,7 @@ def ProcessMulti_LearnWIP(n_iterations, l_episodes, n_episodes, n_steps, n_state
 
     # Use multiprocessing
     with Pool(num_workers) as pool:
-        results = pool.starmap(Process_LearnWIP_iteration, args)
+        results = pool.starmap(Process_LearnTSRB_iteration, args)
 
     # Aggregate results
     all_learn_transitionerrors = np.stack([res["learn_transitionerrors"] for res in results])
@@ -270,7 +270,7 @@ def ProcessMulti_LearnWIP(n_iterations, l_episodes, n_episodes, n_steps, n_state
     all_plan_objectives = np.stack([res["plan_objectives"] for res in results])
 
     if save_data:
-        filename = f'./output-learn-finite/wip_{n_episodes}{n_steps}{n_states}{t_type}{u_type}{n_choices}{thresholds[0]}{u_type}{u_order}.joblib'
+        filename = f'./output-learn-finite/tsrb__ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib'
         joblib.dump([all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives,
                      all_plan_rewards, all_plan_objectives],
                     filename)
@@ -278,7 +278,7 @@ def ProcessMulti_LearnWIP(n_iterations, l_episodes, n_episodes, n_steps, n_state
     return all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives, all_plan_rewards, all_plan_objectives
 
 
-def Process_LearnRUWIP(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
+def Process_LearnNlTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
                       t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, max_wi):
     # Storage for aggregated results
     all_plan_rewards = np.zeros((n_iterations, l_episodes, n_arms))
@@ -291,7 +291,7 @@ def Process_LearnRUWIP(n_iterations, l_episodes, n_episodes, n_steps, n_states, 
 
     for n in range(n_iterations):
         print(f"Processing iteration {n + 1} of {n_iterations}...")
-        results = Process_LearnWIP_iteration(
+        results = Process_LearnTSRB_iteration(
             n, l_episodes=l_episodes, n_episodes=n_episodes, n_steps=n_steps, n_states=n_states, n_arms=n_arms,
             n_choices=n_choices, thresholds=thresholds, t_type=t_type, t_increasing=t_increasing, method=method,
             tru_rew=tru_rew, tru_dyn=tru_dyn, initial_states=initial_states, u_type=u_type, u_order=u_order, max_wi=max_wi
@@ -306,7 +306,7 @@ def Process_LearnRUWIP(n_iterations, l_episodes, n_episodes, n_steps, n_states, 
         all_learn_probs[n] = results["learn_probs"]
 
     if save_data:
-        filename = f'./output-learn-finite/ruwip_{n_episodes}{n_steps}{n_states}{t_type}{u_type}{n_choices}{thresholds[0]}{u_type}{u_order}.joblib'
+        filename = f'./output-learn-finite/nltsrb__ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib'
         joblib.dump([all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives,
                      all_plan_rewards, all_plan_objectives],
                     filename)
@@ -315,7 +315,7 @@ def Process_LearnRUWIP(n_iterations, l_episodes, n_episodes, n_steps, n_states, 
     return all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives, all_plan_rewards, all_plan_objectives
 
 
-def ProcessMulti_LearnRUWIP(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
+def ProcessMulti_LearnNlTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
                            t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, max_wi):
     num_workers = cpu_count() - 1
 
@@ -328,7 +328,7 @@ def ProcessMulti_LearnRUWIP(n_iterations, l_episodes, n_episodes, n_steps, n_sta
 
     # Use multiprocessing
     with Pool(num_workers) as pool:
-        results = pool.starmap(Process_LearnWIP_iteration, args)
+        results = pool.starmap(Process_LearnTSRB_iteration, args)
 
     # Aggregate results
     all_learn_transitionerrors = np.stack([res["learn_transitionerrors"] for res in results])
@@ -339,7 +339,7 @@ def ProcessMulti_LearnRUWIP(n_iterations, l_episodes, n_episodes, n_steps, n_sta
     all_plan_objectives = np.stack([res["plan_objectives"] for res in results])
 
     if save_data:
-        filename = f'./output-learn-finite/ruwip_{n_episodes}{n_steps}{n_states}{t_type}{u_type}{n_choices}{thresholds[0]}{u_type}{u_order}.joblib'
+        filename = f'./output-learn-finite/nltsrb__ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib'
         joblib.dump([all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives,
                      all_plan_rewards, all_plan_objectives],
                     filename)

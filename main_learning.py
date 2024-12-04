@@ -6,15 +6,15 @@ warnings.filterwarnings("ignore")
 
 def main():
     param_sets = {
-        'n_steps_set': [4],
+        'n_steps_set': [5],
         'n_states_set': [4],
-        'armcoef_set': [1],
+        'n_arms_set': [5],
         'f_type_set': ['hom'],
         't_type_set': [3],
         'u_type_set': [1],
         'u_order_set': [0],
         'threshold_set': [0.5],
-        'fraction_set': [0.1]
+        'n_choices_set': [1]
     }
 
     whittle_computation_method = 2
@@ -27,16 +27,16 @@ def main():
         os.makedirs(PATH)
 
     param_list = [
-        (nt, ns, nc, ft_type, tt, ut, uo, th, fr, whittle_computation_method, learning_episodes, n_averaging_episodes, n_iterations, PATH3)
+        (nt, ns, na, ft, tt, ut, uo, th, nc, whittle_computation_method, learning_episodes, n_averaging_episodes, n_iterations, PATH)
         for nt in param_sets['n_steps_set']
         for ns in param_sets['n_states_set']
-        for nc in param_sets['armcoef_set']
-        for ft_type in param_sets['f_type_set']
+        for na in param_sets['n_arms_set']
+        for ft in param_sets['f_type_set']
         for tt in param_sets['t_type_set']
         for ut in param_sets['u_type_set']
         for uo in param_sets['u_order_set']
         for th in param_sets['threshold_set']
-        for fr in param_sets['fraction_set']
+        for nc in param_sets['n_choices_set']
     ]
     
     for params in param_list:
