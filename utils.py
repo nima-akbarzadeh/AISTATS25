@@ -45,6 +45,9 @@ def run_multiple_planning_combinations(param_list, param_sets):
 
 def run_planning_combination(params):
     nt, ns, nc, ft, tt, ut, th, fr, method, n_episodes, PATH = params
+    key_value = f'nt{nt}_nc{nc}_ns{ns}_ft{ft}_tt{tt}_ut{ut}_th{th}_fr{fr}'
+    # print(f'Running for {key_value}')
+    
     na = nc * ns
     ftype = numpy.ones(na, dtype=numpy.int32) if ft == 'hom' else 1 + numpy.arange(na)
 
@@ -56,13 +59,13 @@ def run_planning_combination(params):
     M = MarkovDynamics(na, ns, prob_remain, tt, True)
 
     NeutralWhittleObj = Whittle(ns, na, r_vals, M.transitions, nt)
-    NeutralWhittleObj.get_whittle_indices(computation_type=method, params=[0, nt], n_trials=100)
+    NeutralWhittleObj.get_whittle_indices(computation_type=method, params=[0, nt], n_trials=1000)
 
     UtilityWhittleObj = Whittle(ns, na, r_vals_nl, M.transitions, nt)
-    UtilityWhittleObj.get_whittle_indices(computation_type=method, params=[0, nt], n_trials=100)
+    UtilityWhittleObj.get_whittle_indices(computation_type=method, params=[0, nt], n_trials=1000)
 
     RiskAwareWhittleObj = RiskAwareWhittle(ns, na, r_vals, M.transitions, nt, ut[0], ut[1], th * numpy.ones(na))
-    RiskAwareWhittleObj.get_whittle_indices(computation_type=method, params=[0, nt], n_trials=100)
+    RiskAwareWhittleObj.get_whittle_indices(computation_type=method, params=[0, nt], n_trials=1000)
 
     nch = max(1, int(round(fr * na)))
     initial_states = (ns - 1) * numpy.ones(na, dtype=numpy.int32)
@@ -74,7 +77,6 @@ def run_planning_combination(params):
     ]
 
     results = {}
-    key_value = f'nt{nt}_nc{nc}_ns{ns}_ft{ft}_tt{tt}_ut{ut}_th{th}_fr{fr}'
     for name, process in processes:
         rew, obj, _ = process(n_episodes, nt, ns, na, nch, th * numpy.ones(na), r_vals, M.transitions,
                               initial_states, ut[0], ut[1])
@@ -84,6 +86,8 @@ def run_planning_combination(params):
     improve_rn = numpy.round(100 * (results['RiskAware'] - results['Neutral']) / results['Neutral'], 2)
     improve_ru = numpy.round(100 * (results['RiskAware'] - results['RewUtility']) / results['RewUtility'], 2)
     improve_un = numpy.round(100 * (results['RewUtility'] - results['Neutral']) / results['Neutral'], 2)
+
+    # print(f'Ending for {key_value}')
 
     return key_value, results["Neutral"], results["RewUtility"], results["RiskAware"], improve_rn, improve_ru, improve_un
 

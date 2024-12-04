@@ -19,8 +19,8 @@ def main():
     }
 
     # param_sets = {
-    #     'n_steps_set': [5],
-    #     'n_states_set': [5],
+    #     'n_steps_set': [3],
+    #     'n_states_set': [3],
     #     'armcoef_set': [1],
     #     'f_type_set': ['hom'], # homogeneous reward functions
     #     't_type_set': [3], # 3 is for the third structured model, 13 is for the third model of the clinical example
@@ -30,7 +30,7 @@ def main():
     # }
 
     whittle_computation_method = 2
-    n_episodes = 100
+    n_episodes = 500
 
     PATH = f'./output-finite/'
     if not os.path.exists(PATH):
