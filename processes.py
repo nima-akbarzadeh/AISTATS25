@@ -86,9 +86,9 @@ def Process_SafeRB(SafeW, n_episodes, n_steps, n_states, n_bandits, n_choices, t
         _lifted = [0] * n_bandits
         for t in range(n_steps):
             _states = np.copy(states)
-            for b in range(n_bandits):
-                _lifted[b] = max(0, min(SafeW.n_augment[b]-1, _lifted[b] + _states[b]))
-            # _lifted = [SafeW.all_rews[a].index(np.round(totalrewards[a, k], 2)) for a in range(n_bandits)]
+            # for b in range(n_bandits):
+            #     _lifted[b] = max(0, min(SafeW.n_augment[b]-1, _lifted[b] + _states[b]))
+            _lifted = [SafeW.all_rews[a].index(np.round(totalrewards[a, k], 2)) for a in range(n_bandits)]
             actions = SafeW.Whittle_policy(SafeW.w_indices, n_choices, _states, _lifted, t)
             for a in range(n_bandits):
                 if len(rewards.shape) == 3:
@@ -117,10 +117,10 @@ def Process_LearnSafeRB(SafeW, LearnW, n_episodes, n_steps, n_states, n_bandits,
         for t in range(n_steps):
             _states = np.copy(states)
             _learn_states = np.copy(learn_states)
-            for b in range(n_bandits):
-                _lifted[b] = max(0, min(SafeW.n_augment[b]-1, _lifted[b] + _states[b]))
-                _learn_lifted[b] = max(0, min(SafeW.n_augment[b]-1, _learn_lifted[b] + _learn_states[b]))
-            # _lifted = [SafeW.all_rews[a].index(np.round(totalrewards[a, k], 2)) for a in range(n_bandits)]
+            # for b in range(n_bandits):
+            #     _lifted[b] = max(0, min(SafeW.n_augment[b]-1, _lifted[b] + _states[b]))
+            #     _learn_lifted[b] = max(0, min(SafeW.n_augment[b]-1, _learn_lifted[b] + _learn_states[b]))
+            _lifted = [SafeW.all_rews[a].index(np.round(totalrewards[a, k], 2)) for a in range(n_bandits)]
             _learn_lifted = [LearnW.all_rews[a].index(np.round(learn_totalrewards[a, k], 2)) for a in range(n_bandits)]
             actions = SafeW.Whittle_policy(SafeW.w_indices, n_choices, _states, _lifted, t)
             learn_actions = LearnW.Whittle_policy(LearnW.w_indices, n_choices, _learn_states, _learn_lifted, t)
