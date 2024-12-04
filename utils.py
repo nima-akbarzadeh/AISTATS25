@@ -83,7 +83,7 @@ def run_planning_combination(params):
 
     improve_rn = numpy.round(100 * (results['RiskAware'] - results['Neutral']) / results['Neutral'], 2)
     improve_ru = numpy.round(100 * (results['RiskAware'] - results['RewUtility']) / results['RewUtility'], 2)
-    improve_un = numpy.round(100 * (results['RiskAware'] - results['Neutral']) / results['Neutral'], 2)
+    improve_un = numpy.round(100 * (results['RewUtility'] - results['Neutral']) / results['Neutral'], 2)
 
     return key_value, results["Neutral"], results["RewUtility"], results["RiskAware"], improve_rn, improve_ru, improve_un
 

@@ -8,7 +8,7 @@ def compute_risk(totalrewards, thresholds, u_type, u_order, n_bandits):
     for a in range(n_bandits):
         if u_type == 1:
             objectives[a] = 1 if totalrewards[a] >= thresholds[a] else 0
-        elif u_type == 2:
+        elif u_type == 3:
             objectives[a] = (1 + np.exp(-u_order * (1-thresholds[a]))) / (1 + np.exp(-u_order * (totalrewards[a]-thresholds[a])))
         else:
             objectives[a] = 1 - thresholds[a]**(- 1/u_order) * (np.maximum(0, thresholds[a] - totalrewards[a]))**(1/u_order)

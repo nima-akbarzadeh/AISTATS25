@@ -329,11 +329,18 @@ class RiskAwareWhittle:
                 # Loop over the second dimension of the state space
                 for l in range(self.n_realize[arm][t]):
 
-                    # Convert the next state of the second dimension into an index ranged from 1 to L
-                    nxt_l = max(0, min(self.n_augment[arm] - 1, l + x))
-
                     # Get the state-action value functions
                     for act in range(2):
+
+                        # Convert the next state of the second dimension into an index ranged from 1 to L
+                        if len(self.rewards.shape) == 3:
+                            next_cum_rew = self.all_rews[arm][l] + self.rewards[x, act, arm]
+                        else:
+                            next_cum_rew = self.all_rews[arm][l] + self.rewards[x, arm]
+                        nxt_l = self.all_rews[arm].index(np.round(next_cum_rew, 2))
+
+                        # nxt_l = max(0, min(self.n_augment[arm] - 1, l + x))
+
                         Q[l, x, t, act] = np.round(- penalty * act / self.horizon + np.dot(V[nxt_l, :, t + 1], self.transition[x, :, act, arm]), self.digits + 1)
 
                     # Get the value function and the policy

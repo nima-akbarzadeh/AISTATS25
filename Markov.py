@@ -33,7 +33,7 @@ def rewards_utility(time_horizon, num_arms, num_states, function_type, threshold
         for s, tr in enumerate(total_rewards):
             if u_type == 1:
                 objectives[s] = 1 if tr - thresholds[arm] >= 0 else 0
-            elif u_type == 2:
+            elif u_type == 3:
                 objectives[s] = (1 + np.exp(-u_order * (1 - thresholds[arm]))) / (1 + np.exp(-u_order * (tr - thresholds[arm])))
             else:
                 objectives[s] = 1 - thresholds[arm]**(- 1/u_order) * (np.maximum(0, thresholds[arm] - tr))**(1/u_order)
