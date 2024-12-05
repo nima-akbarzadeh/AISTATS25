@@ -37,8 +37,8 @@ def calculate_multiple_averages(file_path, combinations, output_file):
 
 
 if __name__ == "__main__":
-    file_path = "output-finite/Res_m2.xlsx"
-    output_path = "output-finite/Res_m2_variations.xlsx"
+    file_path = "output-finite/Res_m3.xlsx"
+    output_path = "output-finite/Res_m3_variations.xlsx"
     
     # Define the combinations to evaluate
     combinations = [

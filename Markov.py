@@ -18,7 +18,7 @@ def rewards(time_horizon, num_arms, num_states, function_type, num_actions=1):
             for act in range(num_actions):
                 if function_type[a] > 0:
                     vals[:, act, a] = (np.linspace(0, num_states-1, num=num_states)) ** function_type[a] / (num_states-1) ** function_type[a]
-    vals = np.round(vals / time_horizon, 2)
+    vals = np.round(vals / time_horizon, 3)
     return vals
 
 
@@ -54,7 +54,7 @@ def rewards_utility(time_horizon, num_arms, num_states, function_type, threshold
                     vals[:, act, a] = (np.linspace(0, num_states-1, num=num_states)) ** function_type[a] / (num_states-1) ** function_type[a]
                     vals[:, act, a] = np.round(compute_risk(vals[:, act, a], a), 2)
 
-    vals = np.round(vals / time_horizon, 2)
+    vals = np.round(vals / time_horizon, 3)
     return vals
 
 

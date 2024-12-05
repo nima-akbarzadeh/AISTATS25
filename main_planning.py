@@ -30,9 +30,9 @@ def main():
     # }
 
     whittle_computation_method = 2
-    n_episodes = 500
+    n_episodes = 100
 
-    PATH = f'./output-finite/'
+    PATH = f'./output-finite/method{whittle_computation_method}_ne{n_episodes}/'
     if not os.path.exists(PATH):
         os.makedirs(PATH)
 

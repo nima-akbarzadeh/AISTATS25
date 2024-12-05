@@ -178,29 +178,16 @@ class RiskAwareWhittle:
 
         for a in range(num_arms):
 
+            if len(self.rewards.shape) == 3:
+                all_immediate_rew = self.rewards[:, :, a]
+            else:
+                all_immediate_rew = self.rewards[:, a]
             arm_n_realize = []
             all_total_rewards = []
-
-            prev_rewards_by_t = set([0.0])
-            for t in range(self.horizon+1):
-                
-                if t == 0:
-                    current_rewards = [0]
-                else:
-                    if len(self.rewards.shape) == 3:
-                        current_rewards = self.rewards[:, :, a]
-                        current_rewards = current_rewards.flatten()
-                    else:
-                        current_rewards = self.rewards[:, a]
-                all_total_rewards_by_t = set()
-                for prev_sum in prev_rewards_by_t:
-                    for reward in current_rewards:
-                        all_total_rewards_by_t.add(np.round(prev_sum + reward, 2))
-                all_total_rewards_by_t = sorted(all_total_rewards_by_t)
-                prev_rewards_by_t = set(all_total_rewards_by_t)
-                arm_n_realize.append(prev_rewards_by_t)
-
-                if t == self.horizon:
+            for t in range(self.horizon):
+                all_total_rewards_by_t = possible_reward_sums(all_immediate_rew.flatten(), t + 1)
+                arm_n_realize.append(len(all_total_rewards_by_t))
+                if t == self.horizon - 1:
                     all_total_rewards = all_total_rewards_by_t
 
             self.n_augment[a] = len(all_total_rewards)
@@ -209,7 +196,13 @@ class RiskAwareWhittle:
 
             arm_valus = []
             for total_rewards in all_total_rewards:
-                arm_valus.append(compute_risk([total_rewards], [thresholds[a]], u_type, u_order, 1))
+                if u_type == 2:
+                    arm_valus.append(np.round(1 - thresholds[a] ** (- 1 / u_order) * (np.maximum(0, thresholds[a] - total_rewards)) ** (1 / u_order), 3))
+                elif u_type == 3:
+                    arm_valus.append(np.round((1 + np.exp(-u_order * (1 - thresholds[a]))) / (1 + np.exp(-u_order * (total_rewards - thresholds[a]))), 3))
+                else:
+                    arm_valus.append(1 if total_rewards >= thresholds[a] else 0)
+
             self.all_valus.append(arm_valus)
 
         self.w_indices = []
@@ -221,20 +214,20 @@ class RiskAwareWhittle:
         else:
             self.whittle_brute_force(params[0], params[1], n_trials)
 
-    def is_equal_mat(self, mat1, mat2, realize_values):
+    def is_equal_mat(self, mat1, mat2, realize_index):
         for t in range(self.horizon):
-            mat1_new = mat1[:len(realize_values[t]), :]
-            mat2_new = mat2[:len(realize_values[t]), :]
+            mat1_new = mat1[:realize_index[t], :]
+            mat2_new = mat2[:realize_index[t], :]
             if not np.array_equal(mat1_new, mat2_new):
                 return False
         return True
 
-    def indexability_check(self, arm, arm_indices, realize_values, nxt_pol, ref_pol, penalty, nxt_Q, ref_Q):
+    def indexability_check(self, arm, arm_indices, realize_index, nxt_pol, ref_pol, penalty, nxt_Q, ref_Q):
         for t in range(self.horizon):
-            ref_pol_new = ref_pol[:len(realize_values[t]), :, t]
-            nxt_pol_new = nxt_pol[:len(realize_values[t]), :, t]
-            ref_Q_new = ref_Q[:len(realize_values[t]), :, t, :]
-            nxt_Q_new = nxt_Q[:len(realize_values[t]), :, t, :]
+            ref_pol_new = ref_pol[:realize_index[t], :, t]
+            nxt_pol_new = nxt_pol[:realize_index[t], :, t]
+            ref_Q_new = ref_Q[:realize_index[t], :, t, :]
+            nxt_Q_new = nxt_Q[:realize_index[t], :, t, :]
             if np.any((ref_pol_new == 0) & (nxt_pol_new == 1)):
                 print("Not indexable!")
                 elements = np.argwhere((ref_pol_new == 0) & (nxt_pol_new == 1))
@@ -330,29 +323,12 @@ class RiskAwareWhittle:
             for x in range(self.num_x):
 
                 # Loop over the second dimension of the state space
-                for level in self.n_realize[arm][t]:
+                for l in range(self.n_realize[arm][t]):
 
-                    # Get the state-action value functions
                     for act in range(2):
 
-                        # Convert the next state of the second dimension into an index ranged from 1 to L
-                        if len(self.rewards.shape) == 3:
-                            next_cum_rew = level + self.rewards[x, act, arm]
-                        else:
-                            next_cum_rew = level + self.rewards[x, arm]
+                        nxt_l = max(0, min(self.n_augment[arm] - 1, l + x))
                         
-                        # print('-'*20)
-                        # print(f"t = {t}")
-                        # print(f"x = {x}")
-                        # print(f"level = {level}")
-                        # print(f"a = {act}")
-                        # print(f"self.rewards[x, arm] = {self.rewards[x, arm]}")
-                        # print(f"next_cum_rew = {np.round(next_cum_rew, 2)}")
-                        # print(f"self.all_rews[arm] = {self.all_rews[arm]}")
-                        nxt_l = self.all_rews[arm].index(np.round(next_cum_rew, 2))
-                        # print(f"nxt_l = {nxt_l}")
-                        # # nxt_l = max(0, min(self.n_augment[arm] - 1, l + x))
-
                         Q[l, x, t, act] = np.round(- penalty * act / self.horizon + np.dot(V[nxt_l, :, t + 1], self.transition[x, :, act, arm]), self.digits + 1)
 
                     # Get the value function and the policy
@@ -406,10 +382,11 @@ class RiskAwareWhittle:
 
         return action_vector
 
-# from itertools import product
-# def possible_reward_sums(rewards, num_steps):
-#     reward_combinations = product(rewards, repeat=num_steps)
-#     sums = set()
-#     for combination in reward_combinations:
-#         sums.add(np.round(sum(combination), 3))
-#     return sorted(sums)
+
+from itertools import product
+def possible_reward_sums(rewards, num_steps):
+    reward_combinations = product(rewards, repeat=num_steps)
+    sums = set()
+    for combination in reward_combinations:
+        sums.add(np.round(sum(combination), 3))
+    return sorted(sums)

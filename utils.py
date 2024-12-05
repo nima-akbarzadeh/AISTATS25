@@ -4,6 +4,7 @@ from processes import *
 from whittle import *
 from Markov import *
 from learning import *
+from multiprocessing import Pool, cpu_count
 import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings("ignore")
@@ -19,10 +20,6 @@ def run_multiple_planning_combinations(param_list, param_sets):
     results = {key: {} for key in eval_keys}
     averages = {key: {} for key in eval_keys}
     total = len(param_list)
-    for avg_key in averages:
-        for param, values in param_sets.items():
-            for value in values:
-                averages[avg_key][f'{param}_{value}'] = []
     # Create a Pool of workers
     with Pool(num_cpus) as pool:
         # Use imap to get results as they complete
@@ -33,8 +30,8 @@ def run_multiple_planning_combinations(param_list, param_sets):
 
             print(f"{count} / {total}: {key_value} ---> MEAN-Rel-RN: {improve_rn}, MEAN-Rel-UN: {improve_un}")
 
-            for param, value in zip(['nt', 'np', 'nc', 'ns', 'ft', 'tt', 'ut', 'th', 'fr'], result[0].split('_')):
-                param_key = f'{param}_{value}'
+            for _, value in zip(['nt', 'ns', 'nc', 'ft', 'tt', 'ut', 'th', 'fr', 'meth'], result[0].split('_')):
+                param_key = f'{value}'
                 for i, avg_key in enumerate(eval_keys):
                     if param_key not in averages[avg_key]:
                         averages[avg_key][param_key] = []
@@ -45,7 +42,7 @@ def run_multiple_planning_combinations(param_list, param_sets):
 
 def run_planning_combination(params):
     nt, ns, nc, ft, tt, ut, th, fr, method, n_episodes, PATH = params
-    key_value = f'nt{nt}_nc{nc}_ns{ns}_ft{ft}_tt{tt}_ut{ut}_th{th}_fr{fr}'
+    key_value = f'nt{nt}_ns{ns}_nc{nc}_ft{ft}_tt{tt}_ut{ut}_th{th}_fr{fr}_meth{method}'
     # print(f'Running for {key_value}')
     
     na = nc * ns
@@ -140,6 +137,7 @@ def process_and_plot(prob_err, indx_err, perf_ref, perf_lrn, suffix, path, key_v
 
 def run_learning_combination(params):
     nt, ns, na, ft, tt, ut, uo, th, nc, method, l_episodes, n_episodes, n_iterations, PATH = params
+    key_value = f'nt{nt}_ns{ns}_na{na}_ft{ft}_tt{tt}_ut{ut}_uo{uo}_th{th}_nc{nc}_meth{method}'
     ftype = numpy.ones(na, dtype=numpy.int32) if ft == 'hom' else 1 + numpy.arange(na)
 
     if tt == 0:
@@ -178,7 +176,6 @@ def run_learning_combination(params):
         thresh, tt, True, method, r_vals, M.transitions,
         initial_states, ut, uo, False, nt
     )
-    key_value = f'nt{nt}_ns{ns}_nc{nc}_ft{ft}_tt{tt}_ut{ut}_uo{uo}_th{th}_nc{nc}'
 
     process_and_plot(prob_err_ln, indx_err_ln, obj_n, obj_ln, 'lw', PATH, key_value)
     process_and_plot(prob_err_lu, indx_err_lu, obj_u, obj_lu, 'ln', PATH, key_value)

@@ -4,8 +4,8 @@ import pandas as pd
 
 if __name__ == '__main__':
 
-    df = pd.read_excel('./output-finite/Res_m2.xlsx')
-    target_labels = ['MEAN-4'] # 'MEAN-4' for REL_RAObjToNeutral, 'MEAN-8' for REL_RARewToNeutral
+    df = pd.read_excel('./output-finite/Res_m3.xlsx')
+    target_labels = ['MEAN-Ri_rewutility_to_neutral'] # 'MEAN-riskaware_to_neutral' for REL_RAObjToNeutral, 'MEAN-Ri_rewutility_to_neutral' for REL_RARewToNeutral
     
     for target_label in target_labels:
         y = df[target_label]

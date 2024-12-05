@@ -6,9 +6,9 @@ warnings.filterwarnings("ignore")
 
 def main():
     param_sets = {
-        'n_steps_set': [5],
-        'n_states_set': [4],
-        'n_arms_set': [5],
+        'n_steps_set': [3],
+        'n_states_set': [2],
+        'n_arms_set': [2],
         'f_type_set': ['hom'],
         't_type_set': [3],
         'u_type_set': [1],

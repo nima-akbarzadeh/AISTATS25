@@ -9,9 +9,9 @@ import joblib
 import time
 
 
-def Process_LearnSafeTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
-                      t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, max_wi):
-    n_trials_safety = n_states * n_steps
+def Process_LearnSafeTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, 
+                                    thresholds, t_type, t_increasing, method, tru_rew, tru_dyn, 
+                                    initial_states, u_type, u_order, max_wi, PlanW, n_trials_safety):
 
     # Initialization
     print(f"Iteration {i} starts ...")
@@ -24,10 +24,6 @@ def Process_LearnSafeTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states
         "learn_indexerrors": np.zeros((l_episodes, n_arms)),
         "learn_transitionerrors": np.ones((l_episodes, n_arms)),
     }
-
-    PlanW = RiskAwareWhittle(n_states, n_arms, tru_rew, tru_dyn, n_steps, u_type, u_order, thresholds)
-    PlanW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
-    plan_indices = PlanW.w_indices
 
     # Set up learning dynamics
     if t_type < 10:
@@ -65,7 +61,7 @@ def Process_LearnSafeTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states
 
         for a in range(n_arms):
             results["learn_transitionerrors"][l, a] = np.max(np.abs(est_transitions[:, :, :, a] - tru_dyn[:, :, :, a]))
-            results["learn_indexerrors"][l, a] = np.max(np.abs(sw_indices[a] - plan_indices[a]))
+            results["learn_indexerrors"][l, a] = np.max(np.abs(sw_indices[a] - PlanW.w_indices[a]))
             results["plan_rewards"][l, a] = np.round(np.mean(plan_totalrewards[a, :]), 2)
             results["plan_objectives"][l, a] = np.round(np.mean(plan_objectives[a, :]), 2)
             results["learn_rewards"][l, a] = np.round(np.mean(learn_totalrewards[a, :]), 2)
@@ -75,8 +71,9 @@ def Process_LearnSafeTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states
     return results
 
 
-def Process_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
-                          t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, max_wi):
+def Process_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, 
+                          thresholds, t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, 
+                          u_order, save_data, max_wi):
     """
     Processes multiple iterations of Safe Learning without multiprocessing.
     """
@@ -88,18 +85,21 @@ def Process_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_state
     all_learn_indexerrors = np.zeros((n_iterations, l_episodes, n_arms))
     all_learn_transitionerrors = np.ones((n_iterations, l_episodes, n_arms))
 
-    print(f"Starting {n_iterations} iterations of learning process.")
+    n_trials_safety = 1000
+    PlanW = RiskAwareWhittle(n_states, n_arms, tru_rew, tru_dyn, n_steps, u_type, u_order, thresholds)
+    PlanW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
 
     # Sequentially process each iteration
     for n in range(n_iterations):
-        print(f"Processing iteration {n + 1} of {n_iterations}...")
+        print(f"Iteration {n} starts ...")
 
         # Call the `process_iteration` function for this iteration
         results = Process_LearnSafeTSRB_iteration(
             n, l_episodes=l_episodes, n_episodes=n_episodes, n_steps=n_steps,
             n_states=n_states, n_arms=n_arms, n_choices=n_choices, thresholds=thresholds, t_type=t_type,
             t_increasing=t_increasing, method=method, tru_rew=tru_rew, tru_dyn=tru_dyn,
-            initial_states=initial_states, u_type=u_type, u_order=u_order, max_wi=max_wi
+            initial_states=initial_states, u_type=u_type, u_order=u_order, max_wi=max_wi, PlanW=PlanW,
+            n_trials_safety=n_trials_safety
         )
 
         # Store the results for this iteration
@@ -110,9 +110,11 @@ def Process_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_state
         all_learn_indexerrors[n] = results["learn_indexerrors"]
         all_learn_transitionerrors[n] = results["learn_transitionerrors"]
 
+        print(f"Iteration {n} ends ...")
+
     # Save results if required
     if save_data:
-        filename = f'./output-learn-finite/safetsrb__ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib'
+        filename = f'./output-learn-finite/safetsrb_ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib'
         joblib.dump(
             [all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives,
              all_plan_rewards, all_plan_objectives],
@@ -123,15 +125,21 @@ def Process_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_state
     return all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives, all_plan_rewards, all_plan_objectives
 
 
-def ProcessMulti_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
-                               t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, max_wi):
+def ProcessMulti_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, 
+                               thresholds, t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, 
+                               u_type, u_order, save_data, max_wi):
     num_workers = cpu_count() - 1
+
+    n_trials_safety = 1000
+    PlanW = RiskAwareWhittle(n_states, n_arms, tru_rew, tru_dyn, n_steps, u_type, u_order, thresholds)
+    PlanW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
 
     # Define arguments for each iteration
     args = [
         (i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
-         t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, max_wi)
-        for i in range(n_iterations)
+         t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, max_wi,
+         PlanW, n_trials_safety) 
+         for i in range(n_iterations)
     ]
 
     # Use multiprocessing pool
@@ -148,14 +156,14 @@ def ProcessMulti_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_
 
     if save_data:
         joblib.dump([all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives, all_plan_rewards, all_plan_objectives],
-                    f'./output-learn-finite/safetsrb__ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib')
+                    f'./output-learn-finite/safetsrb_ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib')
 
     return all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives, all_plan_rewards, all_plan_objectives
 
 
 def Process_LearnTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
-                                t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, max_wi):
-    n_trials_safety = n_states * n_steps
+                                t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, 
+                                u_order, max_wi, PlanW, n_trials_safety):
 
     # Initialization
     print(f"Iteration {i} starts ...")
@@ -169,10 +177,6 @@ def Process_LearnTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_
         "learn_transitionerrors": np.ones((l_episodes, n_arms)),
         "learn_probs": np.ones((l_episodes, n_arms))
     }
-
-    PlanW = Whittle(n_states, n_arms, tru_rew, tru_dyn, n_steps)
-    PlanW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
-    plan_indices = PlanW.w_indices
 
     # Learning dynamics setup
     for l in range(l_episodes):
@@ -199,7 +203,7 @@ def Process_LearnTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_
         # Record results for each arm
         for a in range(n_arms):
             results["learn_transitionerrors"][l, a] = np.max(np.abs(est_transitions[:, :, :, a] - tru_dyn[:, :, :, a]))
-            results["learn_indexerrors"][l, a] = np.max(np.abs(w_indices[a] - plan_indices[a]))
+            results["learn_indexerrors"][l, a] = np.max(np.abs(w_indices[a] - PlanW.w_indices[a]))
             results["plan_rewards"][l, a] = np.round(np.mean(plan_totalrewards[a, :]), 2)
             results["plan_objectives"][l, a] = np.round(np.mean(plan_objectives[a, :]), 2)
             results["learn_rewards"][l, a] = np.round(np.mean(learn_totalrewards[a, :]), 2)
@@ -210,7 +214,8 @@ def Process_LearnTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_
 
 
 def Process_LearnTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
-                      t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, max_wi):
+                      t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, 
+                      save_data, max_wi):
     # Storage for aggregated results
     all_plan_rewards = np.zeros((n_iterations, l_episodes, n_arms))
     all_plan_objectives = np.zeros((n_iterations, l_episodes, n_arms))
@@ -220,12 +225,17 @@ def Process_LearnTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n
     all_learn_probs = np.ones((n_iterations, l_episodes, n_arms))
     all_learn_transitionerrors = np.ones((n_iterations, l_episodes, n_arms))
 
+    n_trials_safety = 1000
+    PlanW = Whittle(n_states, n_arms, tru_rew, tru_dyn, n_steps)
+    PlanW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
+
     for n in range(n_iterations):
-        print(f"Processing iteration {n + 1} of {n_iterations}...")
+        print(f"Iteration {n} starts ...")
         results = Process_LearnTSRB_iteration(
             n, l_episodes=l_episodes, n_episodes=n_episodes, n_steps=n_steps, n_states=n_states, n_arms=n_arms,
             n_choices=n_choices, thresholds=thresholds, t_type=t_type, t_increasing=t_increasing, method=method,
-            tru_rew=tru_rew, tru_dyn=tru_dyn, initial_states=initial_states, u_type=u_type, u_order=u_order, max_wi=max_wi
+            tru_rew=tru_rew, tru_dyn=tru_dyn, initial_states=initial_states, u_type=u_type, u_order=u_order, max_wi=max_wi,
+            PlanW=PlanW, n_trials_safety=n_trials_safety
         )
 
         all_plan_rewards[n] = results["plan_rewards"]
@@ -235,9 +245,10 @@ def Process_LearnTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n
         all_learn_indexerrors[n] = results["learn_indexerrors"]
         all_learn_transitionerrors[n] = results["learn_transitionerrors"]
         all_learn_probs[n] = results["learn_probs"]
+        print(f"Iteration {n} ends ...")
 
     if save_data:
-        filename = f'./output-learn-finite/tsrb__ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib'
+        filename = f'./output-learn-finite/tsrb_ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib'
         joblib.dump([all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives,
                      all_plan_rewards, all_plan_objectives],
                     filename)
@@ -250,10 +261,15 @@ def ProcessMulti_LearnTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_stat
                            t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, max_wi):
     num_workers = cpu_count() - 1
 
+    n_trials_safety = 1000
+    PlanW = Whittle(n_states, n_arms, tru_rew, tru_dyn, n_steps)
+    PlanW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
+
     # Define arguments for each iteration
     args = [
         (i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
-         t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, max_wi)
+         t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, 
+         max_wi, PlanW, n_trials_safety)
         for i in range(n_iterations)
     ]
 
@@ -270,7 +286,7 @@ def ProcessMulti_LearnTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_stat
     all_plan_objectives = np.stack([res["plan_objectives"] for res in results])
 
     if save_data:
-        filename = f'./output-learn-finite/tsrb__ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib'
+        filename = f'./output-learn-finite/tsrb_ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib'
         joblib.dump([all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives,
                      all_plan_rewards, all_plan_objectives],
                     filename)
@@ -289,12 +305,17 @@ def Process_LearnNlTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states,
     all_learn_probs = np.ones((n_iterations, l_episodes, n_arms))
     all_learn_transitionerrors = np.ones((n_iterations, l_episodes, n_arms))
 
+    n_trials_safety = 1000
+    PlanW = Whittle(n_states, n_arms, tru_rew, tru_dyn, n_steps)
+    PlanW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
+
     for n in range(n_iterations):
-        print(f"Processing iteration {n + 1} of {n_iterations}...")
+        print(f"Iteration {n} starts ...")
         results = Process_LearnTSRB_iteration(
             n, l_episodes=l_episodes, n_episodes=n_episodes, n_steps=n_steps, n_states=n_states, n_arms=n_arms,
             n_choices=n_choices, thresholds=thresholds, t_type=t_type, t_increasing=t_increasing, method=method,
-            tru_rew=tru_rew, tru_dyn=tru_dyn, initial_states=initial_states, u_type=u_type, u_order=u_order, max_wi=max_wi
+            tru_rew=tru_rew, tru_dyn=tru_dyn, initial_states=initial_states, u_type=u_type, u_order=u_order, max_wi=max_wi,
+            PlanW=PlanW, n_trials_safety=n_trials_safety
         )
 
         all_plan_rewards[n] = results["plan_rewards"]
@@ -304,9 +325,10 @@ def Process_LearnNlTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states,
         all_learn_indexerrors[n] = results["learn_indexerrors"]
         all_learn_transitionerrors[n] = results["learn_transitionerrors"]
         all_learn_probs[n] = results["learn_probs"]
+        print(f"Iteration {n} ends ...")
 
     if save_data:
-        filename = f'./output-learn-finite/nltsrb__ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib'
+        filename = f'./output-learn-finite/nltsrb_ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib'
         joblib.dump([all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives,
                      all_plan_rewards, all_plan_objectives],
                     filename)
@@ -319,10 +341,15 @@ def ProcessMulti_LearnNlTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_st
                            t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, max_wi):
     num_workers = cpu_count() - 1
 
+    n_trials_safety = 1000
+    PlanW = Whittle(n_states, n_arms, tru_rew, tru_dyn, n_steps)
+    PlanW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
+
     # Define arguments for each iteration
     args = [
         (i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
-         t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, max_wi)
+         t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, 
+         max_wi, PlanW, n_trials_safety)
         for i in range(n_iterations)
     ]
 
@@ -339,7 +366,7 @@ def ProcessMulti_LearnNlTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_st
     all_plan_objectives = np.stack([res["plan_objectives"] for res in results])
 
     if save_data:
-        filename = f'./output-learn-finite/nltsrb__ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib'
+        filename = f'./output-learn-finite/nltsrb_ne{n_episodes}_nt{n_steps}_ns{n_states}_na{n_arms}_tt{t_type}_ut{u_type}_nc{n_choices}_th{thresholds[0]}_ut{u_type}_uo{u_order}.joblib'
         joblib.dump([all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives,
                      all_plan_rewards, all_plan_objectives],
                     filename)
