@@ -11,7 +11,7 @@ import time
 
 def Process_LearnSafeTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, 
                                     thresholds, t_type, t_increasing, method, tru_rew, tru_dyn, 
-                                    initial_states, u_type, u_order, max_wi, PlanW, n_trials_safety):
+                                    initial_states, u_type, u_order, wip_params, PlanW, n_trials_safety):
 
     # Initialization
     print(f"Iteration {i} starts ...")
@@ -39,7 +39,7 @@ def Process_LearnSafeTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states
                     est_transitions[s1, :, act, a] = dirichlet.rvs(np.ones(n_states))
         LearnW = RiskAwareWhittle(n_states, n_arms, tru_rew, est_transitions, n_steps, u_type, u_order, thresholds)
 
-    LearnW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
+    LearnW.get_whittle_indices(computation_type=method, params=wip_params, n_trials=n_trials_safety)
     counts = np.ones((n_states, n_states, 2, n_arms))
 
     for l in range(l_episodes):
@@ -56,7 +56,7 @@ def Process_LearnSafeTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states
                     est_transitions[s1, :, act, a] = dirichlet.rvs(counts[s1, :, act, a])
 
         SafeW = RiskAwareWhittle(n_states, n_arms, tru_rew, est_transitions, n_steps, u_type, u_order, thresholds)
-        SafeW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
+        SafeW.get_whittle_indices(computation_type=method, params=wip_params, n_trials=n_trials_safety)
         sw_indices = SafeW.w_indices
 
         for a in range(n_arms):
@@ -73,7 +73,7 @@ def Process_LearnSafeTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states
 
 def Process_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, 
                           thresholds, t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, 
-                          u_order, save_data, max_wi):
+                          u_order, save_data, wip_params, wip_trials):
     """
     Processes multiple iterations of Safe Learning without multiprocessing.
     """
@@ -85,9 +85,9 @@ def Process_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_state
     all_learn_indexerrors = np.zeros((n_iterations, l_episodes, n_arms))
     all_learn_transitionerrors = np.ones((n_iterations, l_episodes, n_arms))
 
-    n_trials_safety = 1000
+    n_trials_safety = wip_trials
     PlanW = RiskAwareWhittle(n_states, n_arms, tru_rew, tru_dyn, n_steps, u_type, u_order, thresholds)
-    PlanW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
+    PlanW.get_whittle_indices(computation_type=method, params=wip_params, n_trials=n_trials_safety)
 
     # Sequentially process each iteration
     for n in range(n_iterations):
@@ -98,7 +98,7 @@ def Process_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_state
             n, l_episodes=l_episodes, n_episodes=n_episodes, n_steps=n_steps,
             n_states=n_states, n_arms=n_arms, n_choices=n_choices, thresholds=thresholds, t_type=t_type,
             t_increasing=t_increasing, method=method, tru_rew=tru_rew, tru_dyn=tru_dyn,
-            initial_states=initial_states, u_type=u_type, u_order=u_order, max_wi=max_wi, PlanW=PlanW,
+            initial_states=initial_states, u_type=u_type, u_order=u_order, wip_params=wip_params, PlanW=PlanW,
             n_trials_safety=n_trials_safety
         )
 
@@ -127,18 +127,17 @@ def Process_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_state
 
 def ProcessMulti_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, 
                                thresholds, t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, 
-                               u_type, u_order, save_data, max_wi):
+                               u_type, u_order, save_data, wip_params, wip_trials):
     num_workers = cpu_count() - 1
 
-    n_trials_safety = 1000
     PlanW = RiskAwareWhittle(n_states, n_arms, tru_rew, tru_dyn, n_steps, u_type, u_order, thresholds)
-    PlanW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
+    PlanW.get_whittle_indices(computation_type=method, params=wip_params, n_trials=wip_trials)
 
     # Define arguments for each iteration
     args = [
         (i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
-         t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, max_wi,
-         PlanW, n_trials_safety) 
+         t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, wip_params,
+         PlanW, wip_trials) 
          for i in range(n_iterations)
     ]
 
@@ -163,7 +162,7 @@ def ProcessMulti_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_
 
 def Process_LearnTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
                                 t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, 
-                                u_order, max_wi, PlanW, n_trials_safety):
+                                u_order, wip_params, PlanW, n_trials_safety):
 
     # Initialization
     print(f"Iteration {i} starts ...")
@@ -194,7 +193,7 @@ def Process_LearnTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_
                         est_transitions[s1, :, act, a] = dirichlet.rvs(np.ones(n_states))
             LearnW = Whittle(n_states, n_arms, tru_rew, est_transitions, n_steps)
 
-        LearnW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
+        LearnW.get_whittle_indices(computation_type=method, params=wip_params, n_trials=n_trials_safety)
         w_indices = LearnW.w_indices
         plan_totalrewards, plan_objectives, learn_totalrewards, learn_objectives, cnts = \
             Process_LearnWhtlRB(PlanW, LearnW, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
@@ -215,7 +214,7 @@ def Process_LearnTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_
 
 def Process_LearnTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
                       t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, 
-                      save_data, max_wi):
+                      save_data, wip_params, wip_trials):
     # Storage for aggregated results
     all_plan_rewards = np.zeros((n_iterations, l_episodes, n_arms))
     all_plan_objectives = np.zeros((n_iterations, l_episodes, n_arms))
@@ -225,16 +224,16 @@ def Process_LearnTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n
     all_learn_probs = np.ones((n_iterations, l_episodes, n_arms))
     all_learn_transitionerrors = np.ones((n_iterations, l_episodes, n_arms))
 
-    n_trials_safety = 1000
+    n_trials_safety = wip_trials
     PlanW = Whittle(n_states, n_arms, tru_rew, tru_dyn, n_steps)
-    PlanW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
+    PlanW.get_whittle_indices(computation_type=method, params=wip_params, n_trials=n_trials_safety)
 
     for n in range(n_iterations):
         print(f"Iteration {n} starts ...")
         results = Process_LearnTSRB_iteration(
             n, l_episodes=l_episodes, n_episodes=n_episodes, n_steps=n_steps, n_states=n_states, n_arms=n_arms,
             n_choices=n_choices, thresholds=thresholds, t_type=t_type, t_increasing=t_increasing, method=method,
-            tru_rew=tru_rew, tru_dyn=tru_dyn, initial_states=initial_states, u_type=u_type, u_order=u_order, max_wi=max_wi,
+            tru_rew=tru_rew, tru_dyn=tru_dyn, initial_states=initial_states, u_type=u_type, u_order=u_order, wip_params=wip_params,
             PlanW=PlanW, n_trials_safety=n_trials_safety
         )
 
@@ -258,18 +257,18 @@ def Process_LearnTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n
 
 
 def ProcessMulti_LearnTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
-                           t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, max_wi):
+                           t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, wip_params, wip_trials):
     num_workers = cpu_count() - 1
 
-    n_trials_safety = 1000
+    n_trials_safety = wip_trials
     PlanW = Whittle(n_states, n_arms, tru_rew, tru_dyn, n_steps)
-    PlanW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
+    PlanW.get_whittle_indices(computation_type=method, params=wip_params, n_trials=n_trials_safety)
 
     # Define arguments for each iteration
     args = [
         (i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
          t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, 
-         max_wi, PlanW, n_trials_safety)
+         wip_params, PlanW, n_trials_safety)
         for i in range(n_iterations)
     ]
 
@@ -295,7 +294,7 @@ def ProcessMulti_LearnTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_stat
 
 
 def Process_LearnNlTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
-                      t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, max_wi):
+                      t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, wip_params, wip_trials):
     # Storage for aggregated results
     all_plan_rewards = np.zeros((n_iterations, l_episodes, n_arms))
     all_plan_objectives = np.zeros((n_iterations, l_episodes, n_arms))
@@ -305,16 +304,16 @@ def Process_LearnNlTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states,
     all_learn_probs = np.ones((n_iterations, l_episodes, n_arms))
     all_learn_transitionerrors = np.ones((n_iterations, l_episodes, n_arms))
 
-    n_trials_safety = 1000
+    n_trials_safety = wip_trials
     PlanW = Whittle(n_states, n_arms, tru_rew, tru_dyn, n_steps)
-    PlanW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
+    PlanW.get_whittle_indices(computation_type=method, params=wip_params, n_trials=n_trials_safety)
 
     for n in range(n_iterations):
         print(f"Iteration {n} starts ...")
         results = Process_LearnTSRB_iteration(
             n, l_episodes=l_episodes, n_episodes=n_episodes, n_steps=n_steps, n_states=n_states, n_arms=n_arms,
             n_choices=n_choices, thresholds=thresholds, t_type=t_type, t_increasing=t_increasing, method=method,
-            tru_rew=tru_rew, tru_dyn=tru_dyn, initial_states=initial_states, u_type=u_type, u_order=u_order, max_wi=max_wi,
+            tru_rew=tru_rew, tru_dyn=tru_dyn, initial_states=initial_states, u_type=u_type, u_order=u_order, wip_params=wip_params,
             PlanW=PlanW, n_trials_safety=n_trials_safety
         )
 
@@ -338,18 +337,18 @@ def Process_LearnNlTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states,
 
 
 def ProcessMulti_LearnNlTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
-                           t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, max_wi):
+                           t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, save_data, wip_params, wip_trials):
     num_workers = cpu_count() - 1
 
-    n_trials_safety = 1000
+    n_trials_safety = wip_trials
     PlanW = Whittle(n_states, n_arms, tru_rew, tru_dyn, n_steps)
-    PlanW.get_whittle_indices(computation_type=method, params=[0, max_wi], n_trials=n_trials_safety)
+    PlanW.get_whittle_indices(computation_type=method, params=wip_params, n_trials=n_trials_safety)
 
     # Define arguments for each iteration
     args = [
         (i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
          t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, 
-         max_wi, PlanW, n_trials_safety)
+         wip_params, PlanW, n_trials_safety)
         for i in range(n_iterations)
     ]
 

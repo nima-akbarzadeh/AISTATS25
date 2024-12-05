@@ -48,7 +48,7 @@ def main():
         for fr in param_sets['fraction_set']
     ]
 
-    results, averages = run_multiple_planning_combinations(param_list, param_sets)
+    results, averages = run_multiple_planning_combinations(param_list, save_flag=False)
 
     # Save results to Excel
     df1 = pd.DataFrame({f'MEAN-{key.capitalize()}': value for key, value in results.items()})

@@ -6,9 +6,9 @@ warnings.filterwarnings("ignore")
 
 def main():
     param_sets = {
-        'n_steps_set': [3],
-        'n_states_set': [2],
-        'n_arms_set': [2],
+        'n_steps_set': [5],
+        'n_states_set': [4, 5],
+        'n_arms_set': [5],
         'f_type_set': ['hom'],
         't_type_set': [3],
         'u_type_set': [1],
@@ -18,8 +18,8 @@ def main():
     }
 
     whittle_computation_method = 2
-    learning_episodes = 500
-    n_averaging_episodes = 10
+    learning_episodes = 50
+    n_averaging_episodes = 5
     n_iterations = 100
 
     PATH = f'./output-learn-finite-{whittle_computation_method}-{learning_episodes}-{n_averaging_episodes}-{n_iterations}/'
@@ -40,6 +40,7 @@ def main():
     ]
     
     for params in param_list:
+        print('='*50)
         run_learning_combination(params)
 
 if __name__ == '__main__':

@@ -10,7 +10,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def run_multiple_planning_combinations(param_list, param_sets):
+def run_multiple_planning_combinations(param_list, save_flag):
 
     # Determine the number of CPUs to use
     num_cpus = cpu_count()-1
@@ -23,7 +23,7 @@ def run_multiple_planning_combinations(param_list, param_sets):
     # Create a Pool of workers
     with Pool(num_cpus) as pool:
         # Use imap to get results as they complete
-        for count, result in enumerate(pool.imap_unordered(run_planning_combination, param_list), 1):
+        for count, result in enumerate(pool.imap_unordered(run_planning_combination, param_list, save_flag), 1):
             key_value, avg_n, avg_ru, avg_ra, improve_rn, improve_ru, improve_un = result
             for i, value in enumerate([avg_n, avg_ru, avg_ra, improve_rn, improve_ru, improve_un]):
                 results[eval_keys[i]][key_value] = value
@@ -40,7 +40,7 @@ def run_multiple_planning_combinations(param_list, param_sets):
     return results, averages
 
 
-def run_planning_combination(params):
+def run_planning_combination(params, save_flag):
     nt, ns, nc, ft, tt, ut, th, fr, method, n_episodes, PATH = params
     key_value = f'nt{nt}_ns{ns}_nc{nc}_ft{ft}_tt{tt}_ut{ut}_th{th}_fr{fr}_meth{method}'
     # print(f'Running for {key_value}')
@@ -77,7 +77,8 @@ def run_planning_combination(params):
     for name, process in processes:
         rew, obj, _ = process(n_episodes, nt, ns, na, nch, th * numpy.ones(na), r_vals, M.transitions,
                               initial_states, ut[0], ut[1])
-        joblib.dump([rew, obj], f"{PATH}{key_value}_{name}.joblib")
+        if save_flag:
+            joblib.dump([rew, obj], f"{PATH}{key_value}_{name}.joblib")
         results[name] = numpy.round(numpy.mean(obj), 3)
 
     improve_rn = numpy.round(100 * (results['RiskAware'] - results['Neutral']) / results['Neutral'], 2)
@@ -158,23 +159,24 @@ def run_learning_combination(params):
     r_vals_nl = rewards_utility(nt, na, ns, ftype, th * numpy.ones(na), ut, uo)
     M = MarkovDynamics(na, ns, prob_remain, tt, True)
     thresh = th * numpy.ones(na)
-
+    wip_params = [0, 1]
+    wip_trials = nt*ns*na
     initial_states = (ns - 1) * numpy.ones(na, dtype=numpy.int32)
 
     prob_err_ln, indx_err_ln, _, obj_ln, _, obj_n = ProcessMulti_LearnTSRB(
         n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
         thresh, tt, True, method, r_vals, M.transitions,
-        initial_states, ut, uo, False, nt
+        initial_states, ut, uo, False, wip_params, wip_trials
     )
     prob_err_lu, indx_err_lu, _, obj_lu, _, obj_u = ProcessMulti_LearnNlTSRB(
         n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
         thresh, tt, True, method, r_vals_nl, M.transitions,
-        initial_states, ut, uo, False, nt
+        initial_states, ut, uo, False, wip_params, wip_trials
     )
     prob_err_lr, indx_err_lr, _, obj_lr, _, obj_r = ProcessMulti_LearnSafeTSRB(
         n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
         thresh, tt, True, method, r_vals, M.transitions,
-        initial_states, ut, uo, False, nt
+        initial_states, ut, uo, False, wip_params, wip_trials
     )
 
     process_and_plot(prob_err_ln, indx_err_ln, obj_n, obj_ln, 'lw', PATH, key_value)
