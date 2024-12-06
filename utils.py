@@ -10,7 +10,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def run_multiple_planning_combinations(param_list, save_flag):
+def run_multiple_planning_combinations(param_list):
 
     # Determine the number of CPUs to use
     num_cpus = cpu_count()-1
@@ -23,14 +23,14 @@ def run_multiple_planning_combinations(param_list, save_flag):
     # Create a Pool of workers
     with Pool(num_cpus) as pool:
         # Use imap to get results as they complete
-        for count, result in enumerate(pool.imap_unordered(run_planning_combination, param_list, save_flag), 1):
-            key_value, avg_n, avg_ru, avg_ra, improve_rn, improve_ru, improve_un = result
+        for count, output in enumerate(pool.imap_unordered(run_planning_combination, param_list), 1):
+            key_value, avg_n, avg_ru, avg_ra, improve_rn, improve_ru, improve_un = output
             for i, value in enumerate([avg_n, avg_ru, avg_ra, improve_rn, improve_ru, improve_un]):
                 results[eval_keys[i]][key_value] = value
 
             print(f"{count} / {total}: {key_value} ---> MEAN-Rel-RN: {improve_rn}, MEAN-Rel-UN: {improve_un}")
 
-            for _, value in zip(['nt', 'ns', 'nc', 'ft', 'tt', 'ut', 'th', 'fr', 'meth'], result[0].split('_')):
+            for _, value in zip(['nt', 'ns', 'nc', 'ft', 'tt', 'ut', 'th', 'fr', 'meth'], output[0].split('_')):
                 param_key = f'{value}'
                 for i, avg_key in enumerate(eval_keys):
                     if param_key not in averages[avg_key]:
@@ -40,8 +40,8 @@ def run_multiple_planning_combinations(param_list, save_flag):
     return results, averages
 
 
-def run_planning_combination(params, save_flag):
-    nt, ns, nc, ft, tt, ut, th, fr, method, n_episodes, PATH = params
+def run_planning_combination(params):
+    nt, ns, nc, ft, tt, ut, th, fr, method, n_episodes, save_flag, PATH = params
     key_value = f'nt{nt}_ns{ns}_nc{nc}_ft{ft}_tt{tt}_ut{ut}_th{th}_fr{fr}_meth{method}'
     # print(f'Running for {key_value}')
     
@@ -165,17 +165,17 @@ def run_learning_combination(params):
 
     prob_err_ln, indx_err_ln, _, obj_ln, _, obj_n = ProcessMulti_LearnTSRB(
         n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
-        thresh, tt, True, method, r_vals, M.transitions,
+        thresh, method, r_vals, M.transitions,
         initial_states, ut, uo, False, wip_params, wip_trials
     )
     prob_err_lu, indx_err_lu, _, obj_lu, _, obj_u = ProcessMulti_LearnNlTSRB(
         n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
-        thresh, tt, True, method, r_vals_nl, M.transitions,
+        thresh, method, r_vals_nl, M.transitions,
         initial_states, ut, uo, False, wip_params, wip_trials
     )
     prob_err_lr, indx_err_lr, _, obj_lr, _, obj_r = ProcessMulti_LearnSafeTSRB(
         n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
-        thresh, tt, True, method, r_vals, M.transitions,
+        thresh, method, r_vals, M.transitions,
         initial_states, ut, uo, False, wip_params, wip_trials
     )
 

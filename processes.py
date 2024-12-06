@@ -87,6 +87,8 @@ def Process_SafeRB(SafeW, n_episodes, n_steps, n_states, n_bandits, n_choices, t
         for t in range(n_steps):
             _states = np.copy(states)
             actions = SafeW.Whittle_policy(SafeW.w_indices, n_choices, _states, _lifted, t)
+            for b in range(n_bandits):
+                _lifted[b] = max(0, min(SafeW.n_augment[b]-1, _lifted[b] + _states[b]))
             for a in range(n_bandits):
                 if len(rewards.shape) == 3:
                     totalrewards[a, k] += rewards[_states[a], actions[a], a]
@@ -94,8 +96,6 @@ def Process_SafeRB(SafeW, n_episodes, n_steps, n_states, n_bandits, n_choices, t
                     totalrewards[a, k] += rewards[_states[a], a]
                 states[a] = np.random.choice(n_states, p=transitions[_states[a], :, actions[a], a])
                 counts[_states[a], states[a], actions[a], a] += 1
-            for b in range(n_bandits):
-                _lifted[b] = max(0, min(SafeW.n_augment[b]-1, _lifted[b] + _states[b]))
         objectives[:, k] = compute_risk(totalrewards[:, k], thresholds, u_type, u_order, n_bandits)
 
     return np.around(totalrewards, 2), np.around(objectives, 2), counts
@@ -118,6 +118,9 @@ def Process_LearnSafeRB(SafeW, LearnW, n_episodes, n_steps, n_states, n_bandits,
             _learn_states = np.copy(learn_states)
             actions = SafeW.Whittle_policy(SafeW.w_indices, n_choices, _states, _lifted, t)
             learn_actions = LearnW.Whittle_policy(LearnW.w_indices, n_choices, _learn_states, _learn_lifted, t)
+            for b in range(n_bandits):
+                _lifted[b] = max(0, min(SafeW.n_augment[b]-1, _lifted[b] + _states[b]))
+                _learn_lifted[b] = max(0, min(LearnW.n_augment[b]-1, _learn_lifted[b] + _learn_states[b]))
             for a in range(n_bandits):
                 if len(rewards.shape) == 3:
                     totalrewards[a, k] += rewards[_states[a], actions[a], a]
@@ -131,9 +134,6 @@ def Process_LearnSafeRB(SafeW, LearnW, n_episodes, n_steps, n_states, n_bandits,
                 else:
                     learn_states[a] = np.random.choice(n_states, p=transitions[_learn_states[a], :, learn_actions[a], a])
                 counts[_learn_states[a], learn_states[a], learn_actions[a], a] += 1
-            for b in range(n_bandits):
-                _lifted[b] = max(0, min(SafeW.n_augment[b]-1, _lifted[b] + _states[b]))
-                _learn_lifted[b] = max(0, min(LearnW.n_augment[b]-1, _learn_lifted[b] + _learn_states[b]))
         objectives[:, k] = compute_risk(totalrewards[:, k], thresholds, u_type, u_order, n_bandits)
         learn_objectives[:, k] = compute_risk(learn_totalrewards[:, k], thresholds, u_type, u_order, n_bandits)
 

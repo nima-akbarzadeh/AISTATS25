@@ -31,13 +31,14 @@ def main():
 
     whittle_computation_method = 2
     n_episodes = 100
-
+    
+    save_flag=False
     PATH = f'./output-finite/method{whittle_computation_method}_ne{n_episodes}/'
     if not os.path.exists(PATH):
         os.makedirs(PATH)
 
     param_list = [
-        (nt, ns, nc, ft_type, tt, ut, th, fr, whittle_computation_method, n_episodes, PATH)
+        (nt, ns, nc, ft_type, tt, ut, th, fr, whittle_computation_method, n_episodes, save_flag, PATH)
         for nt in param_sets['n_steps_set']
         for ns in param_sets['n_states_set']
         for nc in param_sets['armcoef_set']
@@ -48,7 +49,7 @@ def main():
         for fr in param_sets['fraction_set']
     ]
 
-    results, averages = run_multiple_planning_combinations(param_list, save_flag=False)
+    results, averages = run_multiple_planning_combinations(param_list)
 
     # Save results to Excel
     df1 = pd.DataFrame({f'MEAN-{key.capitalize()}': value for key, value in results.items()})

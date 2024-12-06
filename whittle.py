@@ -109,9 +109,9 @@ class Whittle:
                 # Get the state-action value functions
                 for act in range(2):
                     if len(self.reward.shape) == 3:
-                        Q[x, t, act] = self.reward[x, act, arm] - penalty * act + np.dot(V[:, t + 1], self.transition[x, :, act, arm])
+                        Q[x, t, act] = self.reward[x, act, arm] - penalty * act / self.horizon + np.dot(V[:, t + 1], self.transition[x, :, act, arm])
                     else:
-                        Q[x, t, act] = self.reward[x, arm] - penalty * act + np.dot(V[:, t + 1], self.transition[x, :, act, arm])
+                        Q[x, t, act] = self.reward[x, arm] - penalty * act / self.horizon + np.dot(V[:, t + 1], self.transition[x, :, act, arm])
 
                 # Get the value function and the policy
                 if Q[x, t, 1] < Q[x, t, 0]:

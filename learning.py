@@ -10,8 +10,8 @@ import time
 
 
 def Process_LearnSafeTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, 
-                                    thresholds, t_type, t_increasing, method, tru_rew, tru_dyn, 
-                                    initial_states, u_type, u_order, wip_params, PlanW, n_trials_safety):
+                                    thresholds, method, tru_rew, tru_dyn, initial_states, u_type, u_order, 
+                                    wip_params, PlanW, n_trials_safety):
 
     # Initialization
     print(f"Iteration {i} starts ...")
@@ -26,19 +26,12 @@ def Process_LearnSafeTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states
     }
 
     # Set up learning dynamics
-    if t_type < 10:
-        probs = np.array([np.round(np.random.uniform(0.1 / n_states, 1 / n_states), 2) for _ in range(n_arms)])
-        Mest = MarkovDynamics(n_arms, n_states, probs, t_type, t_increasing)
-        est_transitions = Mest.transitions
-        LearnW = RiskAwareWhittle(n_states, n_arms, tru_rew, Mest.transitions, n_steps, u_type, u_order, thresholds)
-    else:
-        est_transitions = np.zeros((n_states, n_states, 2, n_arms))
-        for a in range(n_arms):
-            for s1 in range(n_states):
-                for act in range(2):
-                    est_transitions[s1, :, act, a] = dirichlet.rvs(np.ones(n_states))
-        LearnW = RiskAwareWhittle(n_states, n_arms, tru_rew, est_transitions, n_steps, u_type, u_order, thresholds)
-
+    est_transitions = np.zeros((n_states, n_states, 2, n_arms))
+    for a in range(n_arms):
+        for s1 in range(n_states):
+            for act in range(2):
+                est_transitions[s1, :, act, a] = dirichlet.rvs(np.ones(n_states))
+    LearnW = RiskAwareWhittle(n_states, n_arms, tru_rew, est_transitions, n_steps, u_type, u_order, thresholds)
     LearnW.get_whittle_indices(computation_type=method, params=wip_params, n_trials=n_trials_safety)
     counts = np.ones((n_states, n_states, 2, n_arms))
 
@@ -54,14 +47,12 @@ def Process_LearnSafeTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states
             for s1 in range(n_states):
                 for act in range(2):
                     est_transitions[s1, :, act, a] = dirichlet.rvs(counts[s1, :, act, a])
-
-        SafeW = RiskAwareWhittle(n_states, n_arms, tru_rew, est_transitions, n_steps, u_type, u_order, thresholds)
-        SafeW.get_whittle_indices(computation_type=method, params=wip_params, n_trials=n_trials_safety)
-        sw_indices = SafeW.w_indices
+        LearnW = RiskAwareWhittle(n_states, n_arms, tru_rew, est_transitions, n_steps, u_type, u_order, thresholds)
+        LearnW.get_whittle_indices(computation_type=method, params=wip_params, n_trials=n_trials_safety)
 
         for a in range(n_arms):
             results["learn_transitionerrors"][l, a] = np.max(np.abs(est_transitions[:, :, :, a] - tru_dyn[:, :, :, a]))
-            results["learn_indexerrors"][l, a] = np.max(np.abs(sw_indices[a] - PlanW.w_indices[a]))
+            results["learn_indexerrors"][l, a] = np.max(np.abs(LearnW.w_indices[a] - PlanW.w_indices[a]))
             results["plan_rewards"][l, a] = np.round(np.mean(plan_totalrewards[a, :]), 2)
             results["plan_objectives"][l, a] = np.round(np.mean(plan_objectives[a, :]), 2)
             results["learn_rewards"][l, a] = np.round(np.mean(learn_totalrewards[a, :]), 2)
@@ -72,7 +63,7 @@ def Process_LearnSafeTSRB_iteration(i, l_episodes, n_episodes, n_steps, n_states
 
 
 def Process_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, 
-                          thresholds, t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, 
+                          thresholds, method, tru_rew, tru_dyn, initial_states, u_type, 
                           u_order, save_data, wip_params, wip_trials):
     """
     Processes multiple iterations of Safe Learning without multiprocessing.
@@ -96,8 +87,8 @@ def Process_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_state
         # Call the `process_iteration` function for this iteration
         results = Process_LearnSafeTSRB_iteration(
             n, l_episodes=l_episodes, n_episodes=n_episodes, n_steps=n_steps,
-            n_states=n_states, n_arms=n_arms, n_choices=n_choices, thresholds=thresholds, t_type=t_type,
-            t_increasing=t_increasing, method=method, tru_rew=tru_rew, tru_dyn=tru_dyn,
+            n_states=n_states, n_arms=n_arms, n_choices=n_choices, thresholds=thresholds, 
+            method=method, tru_rew=tru_rew, tru_dyn=tru_dyn,
             initial_states=initial_states, u_type=u_type, u_order=u_order, wip_params=wip_params, PlanW=PlanW,
             n_trials_safety=n_trials_safety
         )
@@ -126,7 +117,7 @@ def Process_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_state
 
 
 def ProcessMulti_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, 
-                               thresholds, t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, 
+                               thresholds, method, tru_rew, tru_dyn, initial_states, 
                                u_type, u_order, save_data, wip_params, wip_trials):
     num_workers = cpu_count() - 1
 
@@ -136,7 +127,7 @@ def ProcessMulti_LearnSafeTSRB(n_iterations, l_episodes, n_episodes, n_steps, n_
     # Define arguments for each iteration
     args = [
         (i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, thresholds,
-         t_type, t_increasing, method, tru_rew, tru_dyn, initial_states, u_type, u_order, wip_params,
+         method, tru_rew, tru_dyn, initial_states, u_type, u_order, wip_params,
          PlanW, wip_trials) 
          for i in range(n_iterations)
     ]
