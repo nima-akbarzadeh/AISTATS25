@@ -4,11 +4,11 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def main():
+def main(n):
     param_sets = {
         'n_steps_set': [5],
-        'n_states_set': [5, 4],
-        'n_arms_set': [5, 4],
+        'n_states_set': [n],
+        'n_arms_set': [n],
         'f_type_set': ['hom'],
         't_type_set': [3],
         'u_type_set': [1],
@@ -18,7 +18,7 @@ def main():
     }
 
     whittle_computation_method = 2
-    learning_episodes = 500
+    learning_episodes = 1000
     n_averaging_episodes = 10
     n_iterations = 100
 
@@ -44,4 +44,7 @@ def main():
         run_learning_combination(params)
 
 if __name__ == '__main__':
-    main()
+    main(2)
+    main(3)
+    main(4)
+    main(5)
