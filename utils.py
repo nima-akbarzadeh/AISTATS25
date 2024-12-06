@@ -16,7 +16,8 @@ def run_multiple_planning_combinations(param_list):
     num_cpus = cpu_count()-1
     print(f"Using {num_cpus} CPUs")
     
-    eval_keys = ['Neutral', 'RewUtility', 'RiskAware', 'RI_RiskAware_to_Neutral', 'RI_RiskAware_to_RewUtility', 'RI_RewUtility_to_Neutral']
+    eval_keys = ['Neutral', 'RewUtility', 'RiskAware', 'RI_RiskAware_to_Neutral', 'RI_RiskAware_to_RewUtility', 
+                 'RI_RewUtility_to_Neutral', 'RI_RiskAware_to_Random']
     results = {key: {} for key in eval_keys}
     averages = {key: {} for key in eval_keys}
     total = len(param_list)
@@ -24,11 +25,11 @@ def run_multiple_planning_combinations(param_list):
     with Pool(num_cpus) as pool:
         # Use imap to get results as they complete
         for count, output in enumerate(pool.imap_unordered(run_planning_combination, param_list), 1):
-            key_value, avg_n, avg_ru, avg_ra, improve_rn, improve_ru, improve_un = output
-            for i, value in enumerate([avg_n, avg_ru, avg_ra, improve_rn, improve_ru, improve_un]):
+            key_value, avg_n, avg_ru, avg_ra, improve_rn, improve_ru, improve_un, improve_rd = output
+            for i, value in enumerate([avg_n, avg_ru, avg_ra, improve_rn, improve_ru, improve_un, improve_rd]):
                 results[eval_keys[i]][key_value] = value
 
-            print(f"{count} / {total}: {key_value} ---> MEAN-Rel-RN: {improve_rn}, MEAN-Rel-UN: {improve_un}")
+            print(f"{count} / {total}: {key_value} ---> MEAN-Rel-RN: {improve_rn}, MEAN-Rel-UN: {improve_un}, MEAN-Rel-RD: {improve_rd}")
 
             for _, value in zip(['nt', 'ns', 'nc', 'ft', 'tt', 'ut', 'th', 'fr', 'meth'], output[0].split('_')):
                 param_key = f'{value}'
@@ -56,13 +57,13 @@ def run_planning_combination(params):
     M = MarkovDynamics(na, ns, prob_remain, tt, True)
 
     NeutralWhittleObj = Whittle(ns, na, r_vals, M.transitions, nt)
-    NeutralWhittleObj.get_whittle_indices(computation_type=method, params=[0, nt], n_trials=1000)
+    NeutralWhittleObj.get_whittle_indices(computation_type=method, params=[0, nt], n_trials=nt*ns*na)
 
     UtilityWhittleObj = Whittle(ns, na, r_vals_nl, M.transitions, nt)
-    UtilityWhittleObj.get_whittle_indices(computation_type=method, params=[0, nt], n_trials=1000)
+    UtilityWhittleObj.get_whittle_indices(computation_type=method, params=[0, nt], n_trials=nt*ns*na)
 
     RiskAwareWhittleObj = RiskAwareWhittle(ns, na, r_vals, M.transitions, nt, ut[0], ut[1], th * numpy.ones(na))
-    RiskAwareWhittleObj.get_whittle_indices(computation_type=method, params=[0, nt], n_trials=1000)
+    RiskAwareWhittleObj.get_whittle_indices(computation_type=method, params=[0, nt], n_trials=nt*ns*na)
 
     nch = max(1, int(round(fr * na)))
     initial_states = (ns - 1) * numpy.ones(na, dtype=numpy.int32)
@@ -70,7 +71,8 @@ def run_planning_combination(params):
     processes = [
         ("Neutral", lambda *args: Process_WhtlRB(NeutralWhittleObj, *args)),
         ("RewUtility", lambda *args: Process_WhtlRB(UtilityWhittleObj, *args)),
-        ("RiskAware", lambda *args: Process_SafeRB(RiskAwareWhittleObj, *args))
+        ("RiskAware", lambda *args: Process_SafeRB(RiskAwareWhittleObj, *args)),
+        ("Random", lambda *args: Process_Random(*args))
     ]
 
     results = {}
@@ -84,10 +86,11 @@ def run_planning_combination(params):
     improve_rn = numpy.round(100 * (results['RiskAware'] - results['Neutral']) / results['Neutral'], 2)
     improve_ru = numpy.round(100 * (results['RiskAware'] - results['RewUtility']) / results['RewUtility'], 2)
     improve_un = numpy.round(100 * (results['RewUtility'] - results['Neutral']) / results['Neutral'], 2)
+    improve_rd = numpy.round(100 * (results['RiskAware'] - results['Random']) / results['Random'], 2)
 
     # print(f'Ending for {key_value}')
 
-    return key_value, results["Neutral"], results["RewUtility"], results["RiskAware"], improve_rn, improve_ru, improve_un
+    return key_value, results["Neutral"], results["RewUtility"], results["RiskAware"], improve_rn, improve_ru, improve_un, improve_rd
 
 
 def plot_data(y_data, xlabel, ylabel, filename, x_data=None, ylim=None, linewidth=4, fill_bounds=None):
