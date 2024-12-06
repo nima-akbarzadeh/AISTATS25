@@ -139,8 +139,6 @@ def process_and_plot(prob_err, indx_err, perf_ref, perf_lrn, suffix, path, key_v
 
 def run_learning_combination(params):
     nt, ns, na, ft, tt, ut, uo, th, nc, method, l_episodes, n_episodes, n_iterations, PATH = params
-    key_value = f'nt{nt}_ns{ns}_na{na}_ft{ft}_tt{tt}_ut{ut}_uo{uo}_th{th}_nc{nc}_met{method}'
-    ftype = numpy.ones(na, dtype=numpy.int32) if ft == 'hom' else 1 + numpy.arange(na)
 
     if tt == 0:
         prob_remain = numpy.round(numpy.linspace(0.1, 0.9, na), 2)
@@ -152,10 +150,84 @@ def run_learning_combination(params):
         prob_remain = numpy.round(numpy.linspace(0.1 / ns, 1 / ns, na), 2)
     elif tt == 6:
         prob_remain = numpy.round(numpy.linspace(0.2, 0.8, na), 2)
+    elif tt == 11:
+        pr_ss_0 = np.round(np.linspace(0.596, 0.690, na), 3)
+        np.random.shuffle(pr_ss_0)
+        pr_sr_0 = np.round(np.linspace(0.045, 0.061, na), 3)
+        np.random.shuffle(pr_sr_0)
+        pr_sp_0 = np.round(np.linspace(0.201, 0.287, na), 3)
+        np.random.shuffle(pr_sp_0)
+        pr_rr_0 = np.round(np.linspace(0.759, 0.822, na), 3)
+        np.random.shuffle(pr_rr_0)
+        pr_rp_0 = np.round(np.linspace(0.130, 0.169, na), 3)
+        np.random.shuffle(pr_rp_0)
+        pr_pp_0 = np.round(np.linspace(0.882, 0.922, na), 3)
+        np.random.shuffle(pr_pp_0)
+        pr_ss_1 = np.round(np.linspace(0.733, 0.801, na), 3)
+        np.random.shuffle(pr_ss_1)
+        pr_sr_1 = np.round(np.linspace(0.047, 0.078, na), 3)
+        np.random.shuffle(pr_sr_1)
+        pr_sp_1 = np.round(np.linspace(0.115, 0.171, na), 3)
+        np.random.shuffle(pr_sp_1)
+        pr_rr_1 = np.round(np.linspace(0.758, 0.847, na), 3)
+        np.random.shuffle(pr_rr_1)
+        pr_rp_1 = np.round(np.linspace(0.121, 0.193, na), 3)
+        np.random.shuffle(pr_rp_1)
+        pr_pp_1 = np.round(np.linspace(0.879, 0.921, na), 3)
+        np.random.shuffle(pr_pp_1)
+        prob_remain = [pr_ss_0, pr_sr_0, pr_sp_0, pr_rr_0, pr_rp_0, pr_pp_0, pr_ss_1, pr_sr_1, pr_sp_1, pr_rr_1, pr_rp_1, pr_pp_1]
+        ns=4
+    elif tt == 12:
+        pr_ss_0 = np.round(np.linspace(0.668, 0.738, na), 3)
+        np.random.shuffle(pr_ss_0)
+        pr_sr_0 = np.round(np.linspace(0.045, 0.061, na), 3)
+        np.random.shuffle(pr_sr_0)
+        pr_rr_0 = np.round(np.linspace(0.831, 0.870, na), 3)
+        np.random.shuffle(pr_rr_0)
+        pr_pp_0 = np.round(np.linspace(0.882, 0.922, na), 3)
+        np.random.shuffle(pr_pp_0)
+        pr_ss_1 = np.round(np.linspace(0.782, 0.833, na), 3)
+        np.random.shuffle(pr_ss_1)
+        pr_sr_1 = np.round(np.linspace(0.047, 0.078, na), 3)
+        np.random.shuffle(pr_sr_1)
+        pr_rr_1 = np.round(np.linspace(0.807, 0.879, na), 3)
+        np.random.shuffle(pr_rr_1)
+        pr_pp_1 = np.round(np.linspace(0.879, 0.921, na), 3)
+        np.random.shuffle(pr_pp_1)
+        prob_remain = [pr_ss_0, pr_sr_0, pr_rr_0, pr_pp_0, pr_ss_1, pr_sr_1, pr_rr_1, pr_pp_1]
+        ns=4
+    elif tt == 13:
+        pr_ss_0 = np.round(np.linspace(0.657, 0.762, na), 3)
+        np.random.shuffle(pr_ss_0)
+        pr_sp_0 = np.round(np.linspace(0.201, 0.287, na), 3)
+        np.random.shuffle(pr_sp_0)
+        pr_pp_0 = np.round(np.linspace(0.882, 0.922, na), 3)
+        np.random.shuffle(pr_pp_0)
+        pr_ss_1 = np.round(np.linspace(0.806, 0.869, na), 3)
+        np.random.shuffle(pr_ss_1)
+        pr_sp_1 = np.round(np.linspace(0.115, 0.171, na), 3)
+        np.random.shuffle(pr_sp_1)
+        pr_pp_1 = np.round(np.linspace(0.879, 0.921, na), 3)
+        np.random.shuffle(pr_pp_1)
+        prob_remain = [pr_ss_0, pr_sp_0, pr_pp_0, pr_ss_1, pr_sp_1, pr_pp_1]
+        ns=3
+    elif tt == 14:
+        pr_ss_0 = np.round(np.linspace(0.713, 0.799, na), 3)
+        np.random.shuffle(pr_ss_0)
+        pr_pp_0 = np.round(np.linspace(0.882, 0.922, na), 3)
+        np.random.shuffle(pr_pp_0)
+        pr_ss_1 = np.round(np.linspace(0.829, 0.885, na), 3)
+        np.random.shuffle(pr_ss_1)
+        pr_pp_1 = np.round(np.linspace(0.879, 0.921, na), 3)
+        np.random.shuffle(pr_pp_1)
+        prob_remain = [pr_ss_0, pr_pp_0, pr_ss_1, pr_pp_1]
+        ns=3
     else:
         prob_remain = numpy.round(numpy.linspace(0.1, 0.9, na), 2)
     numpy.random.shuffle(prob_remain)
 
+    key_value = f'nt{nt}_ns{ns}_na{na}_ft{ft}_tt{tt}_ut{ut}_uo{uo}_th{th}_nc{nc}_met{method}'
+    ftype = numpy.ones(na, dtype=numpy.int32) if ft == 'hom' else 1 + numpy.arange(na)
     r_vals = rewards(nt, na, ns, ftype)
     # r_vals_nl = rewards_utility(nt, na, ns, ftype, th * numpy.ones(na), ut, uo)
     M = MarkovDynamics(na, ns, prob_remain, tt, True)
@@ -167,17 +239,17 @@ def run_learning_combination(params):
     # prob_err_ln, indx_err_ln, _, obj_ln, _, obj_n = ProcessMulti_LearnTSRB(
     #     n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
     #     thresh, method, r_vals, M.transitions,
-    #     initial_states, ut, uo, False, wip_params, wip_trials
+    #     initial_states, ut, uo, True, wip_params, wip_trials
     # )
     # prob_err_lu, indx_err_lu, _, obj_lu, _, obj_u = ProcessMulti_LearnNlTSRB(
     #     n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
     #     thresh, method, r_vals_nl, M.transitions,
-    #     initial_states, ut, uo, False, wip_params, wip_trials
+    #     initial_states, ut, uo, True, wip_params, wip_trials
     # )
     prob_err_lr, indx_err_lr, _, obj_lr, _, obj_r = ProcessMulti_LearnSafeTSRB(
         n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
         thresh, method, r_vals, M.transitions,
-        initial_states, ut, uo, False, wip_params, wip_trials
+        initial_states, ut, uo, True, wip_params, wip_trials
     )
 
     # process_and_plot(prob_err_ln, indx_err_ln, obj_n, obj_ln, 'lw', PATH, key_value)
