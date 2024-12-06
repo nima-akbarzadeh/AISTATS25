@@ -159,39 +159,39 @@ def run_learning_combination(params):
     numpy.random.shuffle(prob_remain)
 
     r_vals = rewards(nt, na, ns, ftype)
-    r_vals_nl = rewards_utility(nt, na, ns, ftype, th * numpy.ones(na), ut, uo)
+    # r_vals_nl = rewards_utility(nt, na, ns, ftype, th * numpy.ones(na), ut, uo)
     M = MarkovDynamics(na, ns, prob_remain, tt, True)
     thresh = th * numpy.ones(na)
-    wip_params = [0, 1]
-    wip_trials = nt*ns*na
+    wip_params = [0, 2*nt]
+    wip_trials = nt*ns
     initial_states = (ns - 1) * numpy.ones(na, dtype=numpy.int32)
 
-    prob_err_ln, indx_err_ln, _, obj_ln, _, obj_n = ProcessMulti_LearnTSRB(
-        n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
-        thresh, method, r_vals, M.transitions,
-        initial_states, ut, uo, False, wip_params, wip_trials
-    )
-    prob_err_lu, indx_err_lu, _, obj_lu, _, obj_u = ProcessMulti_LearnNlTSRB(
-        n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
-        thresh, method, r_vals_nl, M.transitions,
-        initial_states, ut, uo, False, wip_params, wip_trials
-    )
+    # prob_err_ln, indx_err_ln, _, obj_ln, _, obj_n = ProcessMulti_LearnTSRB(
+    #     n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
+    #     thresh, method, r_vals, M.transitions,
+    #     initial_states, ut, uo, False, wip_params, wip_trials
+    # )
+    # prob_err_lu, indx_err_lu, _, obj_lu, _, obj_u = ProcessMulti_LearnNlTSRB(
+    #     n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
+    #     thresh, method, r_vals_nl, M.transitions,
+    #     initial_states, ut, uo, False, wip_params, wip_trials
+    # )
     prob_err_lr, indx_err_lr, _, obj_lr, _, obj_r = ProcessMulti_LearnSafeTSRB(
         n_iterations, l_episodes, n_episodes, nt, ns, na, nc,
         thresh, method, r_vals, M.transitions,
         initial_states, ut, uo, False, wip_params, wip_trials
     )
 
-    process_and_plot(prob_err_ln, indx_err_ln, obj_n, obj_ln, 'lw', PATH, key_value)
-    process_and_plot(prob_err_lu, indx_err_lu, obj_u, obj_lu, 'ln', PATH, key_value)
+    # process_and_plot(prob_err_ln, indx_err_ln, obj_n, obj_ln, 'lw', PATH, key_value)
+    # process_and_plot(prob_err_lu, indx_err_lu, obj_u, obj_lu, 'ln', PATH, key_value)
     process_and_plot(prob_err_lr, indx_err_lr, obj_r, obj_lr, 'ls', PATH, key_value)
 
-    reg_rlu, creg_rlu, bounds_rlu = compute_bounds(obj_r, obj_lu)
-    plot_data(creg_rlu, 'Episodes', 'Regret', f'{PATH}cumreg_rlu_{key_value}.png')
-    plot_data(creg_rlu, 'Episodes', 'Regret', f'{PATH}cumregbounds_rlu_{key_value}.png', fill_bounds=bounds_rlu)
-    plot_data(reg_rlu, 'Episodes', 'Regret/K', f'{PATH}reg_rlu_{key_value}.png')
+    # reg_rlu, creg_rlu, bounds_rlu = compute_bounds(obj_r, obj_lu)
+    # plot_data(creg_rlu, 'Episodes', 'Regret', f'{PATH}cumreg_rlu_{key_value}.png')
+    # plot_data(creg_rlu, 'Episodes', 'Regret', f'{PATH}cumregbounds_rlu_{key_value}.png', fill_bounds=bounds_rlu)
+    # plot_data(reg_rlu, 'Episodes', 'Regret/K', f'{PATH}reg_rlu_{key_value}.png')
 
-    reg_rln, creg_rln, bounds_rln = compute_bounds(obj_r, obj_ln)
-    plot_data(creg_rln, 'Episodes', 'Regret', f'{PATH}cumreg_rln_{key_value}.png')
-    plot_data(creg_rln, 'Episodes', 'Regret', f'{PATH}cumregbounds_rln_{key_value}.png', fill_bounds=bounds_rln)
-    plot_data(reg_rln, 'Episodes', 'Regret/K', f'{PATH}reg_rln_{key_value}.png')
+    # reg_rln, creg_rln, bounds_rln = compute_bounds(obj_r, obj_ln)
+    # plot_data(creg_rln, 'Episodes', 'Regret', f'{PATH}cumreg_rln_{key_value}.png')
+    # plot_data(creg_rln, 'Episodes', 'Regret', f'{PATH}cumregbounds_rln_{key_value}.png', fill_bounds=bounds_rln)
+    # plot_data(reg_rln, 'Episodes', 'Regret/K', f'{PATH}reg_rln_{key_value}.png')

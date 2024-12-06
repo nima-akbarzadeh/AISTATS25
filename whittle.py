@@ -226,20 +226,20 @@ class RiskAwareWhittle:
         for t in range(self.horizon):
             ref_pol_new = ref_pol[:realize_index[t], :, t]
             nxt_pol_new = nxt_pol[:realize_index[t], :, t]
-            ref_Q_new = ref_Q[:realize_index[t], :, t, :]
-            nxt_Q_new = nxt_Q[:realize_index[t], :, t, :]
+            # ref_Q_new = ref_Q[:realize_index[t], :, t, :]
+            # nxt_Q_new = nxt_Q[:realize_index[t], :, t, :]
             if np.any((ref_pol_new == 0) & (nxt_pol_new == 1)):
                 print("Not indexable!")
-                elements = np.argwhere((ref_pol_new == 0) & (nxt_pol_new == 1))
-                for e in elements:
-                    print(f'element: {[e[0], e[1], t]}')
-                    print(f'penalty: {penalty}')
-                    print(f'ref policy: {ref_pol_new[:, e[1]]}')
-                    print(f'nxt policy: {nxt_pol_new[:, e[1]]}')
-                    print(f'ref Q0: {ref_Q_new[e[0], e[1], 0]}')
-                    print(f'ref Q1: {ref_Q_new[e[0], e[1], 1]}')
-                    print(f'nxt Q0: {nxt_Q_new[e[0], e[1], 0]}')
-                    print(f'nxt Q1: {nxt_Q_new[e[0], e[1], 1]}')
+                # elements = np.argwhere((ref_pol_new == 0) & (nxt_pol_new == 1))
+                # for e in elements:
+                #     print(f'element: {[e[0], e[1], t]}')
+                #     print(f'penalty: {penalty}')
+                #     print(f'ref policy: {ref_pol_new[:, e[1]]}')
+                #     print(f'nxt policy: {nxt_pol_new[:, e[1]]}')
+                #     print(f'ref Q0: {ref_Q_new[e[0], e[1], 0]}')
+                #     print(f'ref Q1: {ref_Q_new[e[0], e[1], 1]}')
+                #     print(f'nxt Q0: {nxt_Q_new[e[0], e[1], 0]}')
+                #     print(f'nxt Q1: {nxt_Q_new[e[0], e[1], 1]}')
                 return False, np.zeros((self.n_augment[arm], self.num_x, self.horizon))
             else:
                 elements = np.argwhere((ref_pol_new == 1) & (nxt_pol_new == 0))

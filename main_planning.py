@@ -18,17 +18,6 @@ def main():
         'fraction_set': [0.1, 0.2, 0.3, 0.4, 0.5]
     }
 
-    # param_sets = {
-    #     'n_steps_set': [3],
-    #     'n_states_set': [3],
-    #     'armcoef_set': [1],
-    #     'f_type_set': ['hom'], # homogeneous reward functions
-    #     't_type_set': [3], # 3 is for the third structured model, 13 is for the third model of the clinical example
-    #     'u_type_set': [(2, 8)],
-    #     'threshold_set': [np.round(0.1 * n, 1) for n in range(5, 6)],
-    #     'fraction_set': [0.5]
-    # }
-
     whittle_computation_method = 2
     n_episodes = 100
     
