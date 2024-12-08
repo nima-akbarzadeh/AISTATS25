@@ -46,7 +46,7 @@ def get_transitions(num_arms: int, num_states: int, prob_remain, transition_type
             transitions[1:, 1:, 0, a] = np.tril(np.full((num_states - 1, num_states - 1), prob_remain[a]))
             for s in range(1, num_states):
                 transitions[s, s, 0, a] = (num_states - s) * transitions[s, s, 0, a]
-        elif transition_type == 11:
+        elif transition_type == 'clinical1':
             pr_ss_0 = prob_remain[0][a]
             pr_sr_0 = prob_remain[1][a]
             pr_sp_0 = prob_remain[2][a]
@@ -89,7 +89,7 @@ def get_transitions(num_arms: int, num_states: int, prob_remain, transition_type
                 [1 - (pr_rp_1 + pr_rr_1), pr_rp_1, pr_rr_1, 0],
                 [1 - (pr_sp_1 + pr_sr_1 + pr_ss_1), pr_sp_1, pr_sr_1, pr_ss_1]
             ])
-        elif transition_type == 12:
+        elif transition_type == 'clinical2':
             pr_ss_0 = prob_remain[0][a]
             pr_sr_0 = prob_remain[1][a]
             if pr_ss_0 + pr_sr_0 > 1:
@@ -118,5 +118,45 @@ def get_transitions(num_arms: int, num_states: int, prob_remain, transition_type
                 [0, 1 - pr_rr_1, pr_rr_1, 0],
                 [0, 1 - (pr_sr_1 + pr_ss_1), pr_sr_1, pr_ss_1]
             ])
-
+        elif transition_type == 'clinical3':
+            pr_ss_0 = prob_remain[0][a]
+            pr_sp_0 = prob_remain[1][a]
+            if pr_ss_0 + pr_sp_0 > 1:
+                sumprobs = pr_ss_0 + pr_sp_0
+                pr_ss_0 = ceil_to_decimals(pr_ss_0 / sumprobs, 3)
+                pr_sp_0 = ceil_to_decimals(pr_sp_0 / sumprobs, 3)
+            pr_pp_0 = prob_remain[2][a]
+            pr_ss_1 = prob_remain[3][a]
+            pr_sp_1 = prob_remain[4][a]
+            if pr_ss_1 + pr_sp_1 > 1:
+                sumprobs = pr_ss_1 + pr_sp_1
+                pr_ss_1 = ceil_to_decimals(pr_ss_1 / sumprobs, 3)
+                pr_sp_1 = ceil_to_decimals(pr_sp_1 / sumprobs, 3)
+            pr_pp_1 = prob_remain[5][a]
+            transitions[:, :, 0, a] = np.array([
+                [1, 0, 0],
+                [1 - pr_pp_0, pr_pp_0, 0],
+                [1 - (pr_sp_0 + pr_ss_0), pr_sp_0, pr_ss_0]
+            ])
+            transitions[:, :, 1, a] = np.array([
+                [1, 0, 0],
+                [1 - pr_pp_1, pr_pp_1, 0],
+                [1 - (pr_sp_1 + pr_ss_1), pr_sp_1, pr_ss_1]
+            ])
+        elif transition_type == 'clinical4':
+            pr_ss_0 = prob_remain[0][a]
+            pr_pp_0 = prob_remain[1][a]
+            pr_ss_1 = prob_remain[2][a]
+            pr_pp_1 = prob_remain[3][a]
+            transitions[:, :, 0, a] = np.array([
+                [1, 0, 0],
+                [1-pr_pp_0, pr_pp_0, 0],
+                [0, 1-pr_ss_0, pr_ss_0]
+                ])
+            transitions[:, :, 1, a] = np.array([
+                [1, 0, 0],
+                [1-pr_pp_1, pr_pp_1, 0],
+                [0, 1-pr_ss_1, pr_ss_1]
+                ])
+            
     return transitions
