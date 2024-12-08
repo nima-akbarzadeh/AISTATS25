@@ -80,52 +80,6 @@ def run_a_planning_combination(params):
     return key_value, results["Neutral"], results["RewUtility"], results["RiskAware"], improve_rn, improve_ru, improve_un
 
 
-def plot_data(y_data, xlabel, ylabel, filename, x_data=None, ylim=None, linewidth=4, fill_bounds=None):
-    """
-    Generic plotting function to handle repetitive plotting tasks.
-    """
-    plt.figure(figsize=(8, 6))
-    x_data = x_data if x_data is not None else range(len(y_data))
-    plt.plot(x_data, y_data, linewidth=linewidth)
-    if fill_bounds:
-        lower_bound, upper_bound = fill_bounds
-        plt.fill_between(x_data, lower_bound, upper_bound, color='blue', alpha=0.2)
-    plt.xlabel(xlabel, fontsize=14, fontweight='bold')
-    plt.ylabel(ylabel, fontsize=14, fontweight='bold')
-    if ylim:
-        plt.ylim(ylim)
-    plt.xticks(fontsize=12, fontweight='bold')
-    plt.yticks(fontsize=12, fontweight='bold')
-    plt.grid(True)
-    plt.savefig(filename)
-    plt.close()
-
-
-def compute_bounds(perf_ref, perf_lrn):
-    """
-    Computes regret and confidence bounds.
-    """
-    avg_creg = np.mean(np.cumsum(np.sum(perf_ref - perf_lrn, axis=2), axis=1), axis=0)
-    std_creg = np.std(np.cumsum(np.sum(perf_ref - perf_lrn, axis=2), axis=1), axis=0)
-    avg_reg = [avg_creg[k] / (k + 1) for k in range(len(avg_creg))]
-    return avg_reg, avg_creg, (avg_creg - std_creg, avg_creg + std_creg)
-
-
-def process_and_plot(prob_err, indx_err, perf_ref, perf_lrn, suffix, path, key_value):
-    """
-    Processes data and generates all required plots for a given suffix.
-    """
-    trn_err = np.mean(prob_err, axis=(0, 2))
-    wis_err = np.mean(indx_err, axis=(0, 2))
-    reg, creg, bounds = compute_bounds(perf_ref, perf_lrn)
-
-    plot_data(trn_err, 'Episodes', 'Max Transition Error', f'{path}per_{suffix}_{key_value}.png')
-    plot_data(wis_err, 'Episodes', 'Max WI Error', f'{path}wer_{suffix}_{key_value}.png')
-    plot_data(creg, 'Episodes', 'Regret', f'{path}cumreg_{suffix}_{key_value}.png')
-    plot_data(creg, 'Episodes', 'Regret', f'{path}cumregbounds_{suffix}_{key_value}.png', fill_bounds=bounds)
-    plot_data(reg, 'Episodes', 'Regret/K', f'{path}reg_{suffix}_{key_value}.png')
-
-
 def run_learning_combination(params):
     nt, ns, na, tt, ut, th, nc, l_episodes, n_episodes, n_iterations, save_data, PATH = params
 
@@ -213,26 +167,72 @@ def run_learning_combination(params):
     markov_matrix = get_transitions(na, ns, prob_remain, 'structured')
     initial_states = (ns - 1) * numpy.ones(na, dtype=numpy.int32)
 
-    # prob_err_ln, indx_err_ln, _, obj_ln, _, obj_n = multiprocess_learn_LRNPTS(
-    #     n_iterations, l_episodes, n_episodes, nt, ns, na, nc, th, rew_vals, markov_matrix, initial_states, ut[0], ut[1], save_data, f'{PATH}neutral_{key_value}.joblib'
-    # )
-    # prob_err_lu, indx_err_lu, _, obj_lu, _, obj_u = multiprocess_learn_LRNPTS(
-    #     n_iterations, l_episodes, n_episodes, nt, ns, na, nc, th, rew_utility_vals, markov_matrix, initial_states, ut[0], ut[1], save_data, f'{PATH}rewutility_{key_value}.joblib'
-    # )
+    prob_err_ln, indx_err_ln, _, obj_ln, _, obj_n = multiprocess_learn_LRNPTS(
+        n_iterations, l_episodes, n_episodes, nt, ns, na, nc, th, rew_vals, markov_matrix, initial_states, ut[0], ut[1], save_data, f'{PATH}neutral_{key_value}.joblib'
+    )
+    prob_err_lu, indx_err_lu, _, obj_lu, _, obj_u = multiprocess_learn_LRNPTS(
+        n_iterations, l_episodes, n_episodes, nt, ns, na, nc, th, rew_utility_vals, markov_matrix, initial_states, ut[0], ut[1], save_data, f'{PATH}rewutility_{key_value}.joblib'
+    )
     prob_err_lr, indx_err_lr, _, obj_lr, _, obj_r = multiprocess_learn_LRAPTS(
         n_iterations, l_episodes, n_episodes, nt, ns, na, nc, th, rew_vals, markov_matrix, initial_states, ut[0], ut[1], save_data, f'{PATH}riskaware_{key_value}.joblib'
     )
 
-    # process_and_plot(prob_err_ln, indx_err_ln, obj_n, obj_ln, 'lw', PATH, key_value)
-    # process_and_plot(prob_err_lu, indx_err_lu, obj_u, obj_lu, 'ln', PATH, key_value)
-    # process_and_plot(prob_err_lr, indx_err_lr, obj_r, obj_lr, 'ls', PATH, key_value)
+    process_and_plot(prob_err_ln, indx_err_ln, obj_n, obj_ln, 'lw', PATH, key_value)
+    process_and_plot(prob_err_lu, indx_err_lu, obj_u, obj_lu, 'ln', PATH, key_value)
+    process_and_plot(prob_err_lr, indx_err_lr, obj_r, obj_lr, 'ls', PATH, key_value)
 
-    # reg_rlu, creg_rlu, bounds_rlu = compute_bounds(obj_r, obj_lu)
-    # plot_data(creg_rlu, 'Episodes', 'Regret', f'{PATH}cumreg_rlu_{key_value}.png')
-    # plot_data(creg_rlu, 'Episodes', 'Regret', f'{PATH}cumregbounds_rlu_{key_value}.png', fill_bounds=bounds_rlu)
-    # plot_data(reg_rlu, 'Episodes', 'Regret/K', f'{PATH}reg_rlu_{key_value}.png')
+    reg_lu, creg_lu, bounds_lu = compute_bounds(obj_r, obj_lu)
+    plot_data(creg_lu, 'Episodes', 'Regret', f'{PATH}cumreg_lu_{key_value}.png')
+    plot_data(creg_lu, 'Episodes', 'Regret', f'{PATH}cumregbounds_lu_{key_value}.png', fill_bounds=bounds_lu)
+    plot_data(reg_lu, 'Episodes', 'Regret/K', f'{PATH}reg_lu_{key_value}.png')
 
-    # reg_rln, creg_rln, bounds_rln = compute_bounds(obj_r, obj_ln)
-    # plot_data(creg_rln, 'Episodes', 'Regret', f'{PATH}cumreg_rln_{key_value}.png')
-    # plot_data(creg_rln, 'Episodes', 'Regret', f'{PATH}cumregbounds_rln_{key_value}.png', fill_bounds=bounds_rln)
-    # plot_data(reg_rln, 'Episodes', 'Regret/K', f'{PATH}reg_rln_{key_value}.png')
+    reg_ln, creg_ln, bounds_ln = compute_bounds(obj_r, obj_ln)
+    plot_data(creg_ln, 'Episodes', 'Regret', f'{PATH}cumreg_ln_{key_value}.png')
+    plot_data(creg_ln, 'Episodes', 'Regret', f'{PATH}cumregbounds_ln_{key_value}.png', fill_bounds=bounds_ln)
+    plot_data(reg_ln, 'Episodes', 'Regret/K', f'{PATH}reg_ln_{key_value}.png')
+
+
+def plot_data(y_data, xlabel, ylabel, filename, x_data=None, ylim=None, linewidth=4, fill_bounds=None):
+    """
+    Generic plotting function to handle repetitive plotting tasks.
+    """
+    plt.figure(figsize=(8, 6))
+    x_data = x_data if x_data is not None else range(len(y_data))
+    plt.plot(x_data, y_data, linewidth=linewidth)
+    if fill_bounds:
+        lower_bound, upper_bound = fill_bounds
+        plt.fill_between(x_data, lower_bound, upper_bound, color='blue', alpha=0.2)
+    plt.xlabel(xlabel, fontsize=14, fontweight='bold')
+    plt.ylabel(ylabel, fontsize=14, fontweight='bold')
+    if ylim:
+        plt.ylim(ylim)
+    plt.xticks(fontsize=12, fontweight='bold')
+    plt.yticks(fontsize=12, fontweight='bold')
+    plt.grid(True)
+    plt.savefig(filename)
+    plt.close()
+
+
+def compute_bounds(perf_ref, perf_lrn):
+    """
+    Computes regret and confidence bounds.
+    """
+    avg_creg = np.mean(np.cumsum(np.sum(perf_ref - perf_lrn, axis=2), axis=1), axis=0)
+    std_creg = np.std(np.cumsum(np.sum(perf_ref - perf_lrn, axis=2), axis=1), axis=0)
+    avg_reg = [avg_creg[k] / (k + 1) for k in range(len(avg_creg))]
+    return avg_reg, avg_creg, (avg_creg - std_creg, avg_creg + std_creg)
+
+
+def process_and_plot(prob_err, indx_err, perf_ref, perf_lrn, suffix, path, key_value):
+    """
+    Processes data and generates all required plots for a given suffix.
+    """
+    trn_err = np.mean(prob_err, axis=(0, 2))
+    wis_err = np.mean(indx_err, axis=(0, 2))
+    reg, creg, bounds = compute_bounds(perf_ref, perf_lrn)
+
+    plot_data(trn_err, 'Episodes', 'Max Transition Error', f'{path}per_{suffix}_{key_value}.png')
+    plot_data(wis_err, 'Episodes', 'Max WI Error', f'{path}wer_{suffix}_{key_value}.png')
+    plot_data(creg, 'Episodes', 'Regret', f'{path}cumreg_{suffix}_{key_value}.png')
+    plot_data(creg, 'Episodes', 'Regret', f'{path}cumregbounds_{suffix}_{key_value}.png', fill_bounds=bounds)
+    plot_data(reg, 'Episodes', 'Regret/K', f'{path}reg_{suffix}_{key_value}.png')

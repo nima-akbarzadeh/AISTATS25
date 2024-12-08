@@ -9,7 +9,7 @@ def main():
         'n_steps': [5],
         'n_states': [4],
         'n_arms': [5],
-        'transition_type': [3],
+        'transition_type': ['structured'],
         'utility_functions': [(1, 0)],
         'thresholds': [0.5],
         'arm_choices': [1]
@@ -20,7 +20,7 @@ def main():
     n_iterations = 100
 
     save_data = True
-    PATH = f'./learning-finite-{learning_episodes}-{n_averaging_episodes}-{n_iterations}/medical_examples/'
+    PATH = f'./learning-finite-{learning_episodes}-{n_averaging_episodes}-{n_iterations}/'
     if not os.path.exists(PATH):
         os.makedirs(PATH)
 
