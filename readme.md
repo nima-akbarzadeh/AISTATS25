@@ -18,7 +18,7 @@ The project includes two main simulation modules and several supporting scripts:
   Contains classes and methods for computing Whittle indices:
   - `Whittle`: For risk-neutral index computation.
   - `RiskAwareWhittle`: Extends Whittle computation with risk-aware considerations.
-  Implements binary search and brute-force methods for index computation.
+  Implements binary search methods in addition to backward induction for index computation.
 
 - **`Markov.py`**  
   Defines reward structures and dynamics for arms:
@@ -42,10 +42,7 @@ The project includes two main simulation modules and several supporting scripts:
   - Plotting performance metrics like regret.
 
 - **`histogram_statistics.py`**  
-  This script generates and plots histograms for the reported statistics in the paper. It computes metrics such as mean, min, max, and the portion of values below zero, providing insights into relative improvements or other key measures.
-
-- **`parameter_change_scores.py`**  
-  Computes the average score for each parameter across multiple setups and iterations. Useful for identifying the impact of individual parameters by fixing them and analyzing their influence on overall performance.
+  This script generates and plots histograms for the reported statistics in the paper. It computes metrics such as mean, min, max, and the portion of values below zero, providing insights into relative improvements and other key measures.
 
 - **`plots_utility.py`**  
   Generates visualizations for utility functions discussed in the paper. The script plots various utility representations, including risk-averse and risk-neutral utility functions, based on total rewards.
@@ -80,8 +77,14 @@ This project requires Python 3.x and the following Python libraries:
 - `joblib`
 - `matplotlib`
 - `pandas`
+- `openpyxl`
 
 To install these dependencies, run:
 ```bash
-pip install numpy scipy joblib matplotlib pandas
+pip install numpy scipy joblib matplotlib pandas openpyxl
 ```
+
+### Results
+
+Results of the simulation for planning is saved in `./planning-finite/`, and the results pf simulation
+for learning is saved in `./learning-finite-.../`.
