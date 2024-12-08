@@ -9,15 +9,15 @@ def main():
         'n_steps': [5],
         'n_states': [4],
         'n_arms': [5],
-        'transition_type': [11],
-        'utility_functions': [(1, 0), (2, 4), (2, 8), (2, 16), (3, 4), (3, 8), (3, 16)],
-        'thresholds': [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+        'transition_type': [3],
+        'utility_functions': [(1, 0)],
+        'thresholds': [0.5],
         'arm_choices': [1]
     }
 
-    learning_episodes = 2
-    n_averaging_episodes = 1
-    n_iterations = 5
+    learning_episodes = 500
+    n_averaging_episodes = 10
+    n_iterations = 100
 
     save_data = True
     PATH = f'./learning-finite-{learning_episodes}-{n_averaging_episodes}-{n_iterations}/medical_examples/'
