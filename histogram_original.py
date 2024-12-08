@@ -3,15 +3,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Load the Excel file
-file_path = './planning-finite/planning_results.xlsx'
-output_path = './planning-finite/histogram_large.png'
+file_path = './planning-finite/planning_results.xlsx'  # Replace with your Excel file path
+output_path = './planning-finite/histogram_original.png'
 df = pd.read_excel(file_path)
 
-# Filter rows based on the naming pattern
+# Ensure the `Key` column is treated as a string
 df['Key'] = df['Key'].astype(str)
 
-# Filter rows based on the naming pattern in the `Key` column
-filtered_df = df[df['Key'].str.contains(r'^nt5_ns5_nc5_', regex=True)]
+# Define the complex regex pattern for filtering
+pattern = (
+    r'^nt(3|4|5)_ns(2|3|4|5)_nc(3|4|5)_ut(24|28|216|34|38|316)_th(0\.5|0\.6|0\.7)_fr(0\.3|0\.4|0\.5)$'
+)
+
+# Filter rows based on the pattern in the `Key` column
+filtered_df = df[df['Key'].str.contains(pattern, regex=True)]
+print(len(filtered_df))
 
 # Define the target column
 target_label = 'MEAN-RI_RiskAware_to_Neutral'
@@ -47,7 +53,7 @@ plt.grid(axis='y')
 plt.xlabel('Relative Improvement', fontsize=14, fontweight='bold')
 plt.ylabel('Frequency', fontsize=14, fontweight='bold')
 
-# Tight layout
+# Tight layout for better spacing
 plt.tight_layout()
 
 # Save the plot
