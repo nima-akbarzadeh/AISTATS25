@@ -16,15 +16,17 @@ def run_multiple_planning_combinations(param_list):
     num_cpus = cpu_count()-1
     print(f"Using {num_cpus} CPUs")
     
-    eval_keys = ['Neutral', 'RewUtility', 'RiskAware', 'RI_RiskAware_to_Neutral', 'RI_RiskAware_to_RewUtility', 'RI_RewUtility_to_Neutral']
+    eval_keys = ['Neutral', 'RewUtility', 'RiskAware', 
+                 'RI_RiskAware_to_Neutral', 'RI_RiskAware_to_RewUtility', 'RI_RewUtility_to_Neutral',
+                 'DF_RiskAware_to_Neutral', 'DF_RiskAware_to_RewUtility', 'DF_RewUtility_to_Neutral',]
     results = {key: {} for key in eval_keys}
     averages = {key: {} for key in eval_keys}
     total = len(param_list)
     with Pool(num_cpus) as pool:
         # Use imap to get results as they complete
         for count, output in enumerate(pool.imap_unordered(run_a_planning_combination, param_list), 1):
-            key_value, avg_n, avg_ru, avg_ra, improve_rn, improve_ru, improve_un = output
-            for i, value in enumerate([avg_n, avg_ru, avg_ra, improve_rn, improve_ru, improve_un]):
+            key_value, avg_n, avg_ru, avg_ra, improve_rn, improve_ru, improve_un, diff_rn, diff_ru, diff_un = output
+            for i, value in enumerate([avg_n, avg_ru, avg_ra, improve_rn, improve_ru, improve_un, diff_rn, diff_ru, diff_un]):
                 results[eval_keys[i]][key_value] = value
 
             print(f"{count} / {total}: {key_value} ---> MEAN-Rel-RN: {improve_rn}, MEAN-Rel-UN: {improve_un}")
@@ -71,13 +73,17 @@ def run_a_planning_combination(params):
         rew, obj = process(n_iterations, nt, ns, na, nch, th, rew_vals, markov_matrix, initial_states, ut[0], ut[1])
         if save_flag:
             joblib.dump([rew, obj], f"{PATH}{key_value}_{name}.joblib")
-        results[name] = numpy.round(numpy.mean(obj), 3)
+        results[name] = numpy.mean(obj)
 
     improve_rn = numpy.round(100 * (results['RiskAware'] - results['Neutral']) / results['Neutral'], 2)
     improve_ru = numpy.round(100 * (results['RiskAware'] - results['RewUtility']) / results['RewUtility'], 2)
     improve_un = numpy.round(100 * (results['RewUtility'] - results['Neutral']) / results['Neutral'], 2)
 
-    return key_value, results["Neutral"], results["RewUtility"], results["RiskAware"], improve_rn, improve_ru, improve_un
+    diff_rn = na * np.round(results['RiskAware'] - results['Neutral'], 4)
+    diff_ru = na * np.round(results['RiskAware'] - results['RewUtility'], 4)
+    diff_un = na * np.round(results['RewUtility'] - results['Neutral'], 4)
+
+    return key_value, results["Neutral"], results["RewUtility"], results["RiskAware"], improve_rn, improve_ru, improve_un, diff_rn, diff_ru, diff_un
 
 
 def run_learning_combination(params):

@@ -5,7 +5,7 @@ import pandas as pd
 if __name__ == '__main__':
 
     df = pd.read_excel('./planning-finite/planning_results.xlsx')
-    target_labels = ['MEAN-RI_RiskAware_to_Neutral', 'MEAN-RI_RewUtility_to_Neutral'] 
+    target_labels = ['MEAN-Ri_riskaware_to_neutral', 'MEAN-Ri_rewutility_to_neutral'] 
     
     for target_label in target_labels:
         y = df[target_label]

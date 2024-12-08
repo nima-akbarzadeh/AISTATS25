@@ -26,7 +26,7 @@ class Whittle:
     def indexability_check(self, arm_indices, nxt_pol, ref_pol, penalty):
         for t in range(self.horizon):
             if np.any((ref_pol[:, t] == 0) & (nxt_pol[:, t] == 1)):
-                print("Not indexable!")
+                # print("Not indexable!")
                 return False, np.zeros((self.num_x, self.horizon))
             else:
                 elements = np.argwhere((ref_pol[:, t] == 1) & (nxt_pol[:, t] == 0))
@@ -161,7 +161,7 @@ class RiskAwareWhittle:
             ref_pol_new = ref_pol[:realize_index[t], :, t]
             nxt_pol_new = nxt_pol[:realize_index[t], :, t]
             if np.any((ref_pol_new == 0) & (nxt_pol_new == 1)):
-                print("Not indexable!")
+                # print("Not indexable!")
                 return False, np.zeros((self.n_augment[arm], self.num_x, self.horizon))
             else:
                 elements = np.argwhere((ref_pol_new == 1) & (nxt_pol_new == 0))

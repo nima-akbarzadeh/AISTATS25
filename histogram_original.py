@@ -20,7 +20,7 @@ filtered_df = df[df['Key'].str.contains(pattern, regex=True)]
 print(len(filtered_df))
 
 # Define the target column
-target_label = 'MEAN-RI_RiskAware_to_Neutral'
+target_label = 'MEAN-Ri_riskaware_to_neutral'
 
 # Ensure the target column exists
 if target_label not in filtered_df.columns:

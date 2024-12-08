@@ -43,8 +43,7 @@ def main():
     df1.index.name = 'Key'
     df1.to_excel(f'{PATH}planning_results.xlsx')
 
-    df2 = pd.DataFrame({f'MEAN-{key.capitalize()}': {k: numpy.mean(v) if v else 0 for k, v in avg.items()}
-                        for key, avg in averages.items()})
+    df2 = pd.DataFrame({f'MEAN-{key.capitalize()}': {k: numpy.mean(v) if v else 0 for k, v in avg.items()} for key, avg in averages.items()})
     df2.index.name = 'Key'
     df2.to_excel(f'{PATH}planning_avg_results.xlsx')
 

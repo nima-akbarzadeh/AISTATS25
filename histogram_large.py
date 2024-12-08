@@ -14,7 +14,7 @@ df['Key'] = df['Key'].astype(str)
 filtered_df = df[df['Key'].str.contains(r'^nt5_ns5_nc5_', regex=True)]
 
 # Define the target column
-target_label = 'MEAN-RI_RiskAware_to_Neutral'
+target_label = 'MEAN-Ri_riskAware_to_neutral'
 
 # Ensure the target column exists
 if target_label not in filtered_df.columns:
