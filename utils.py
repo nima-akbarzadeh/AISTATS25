@@ -187,19 +187,19 @@ def run_learning_combination(params):
         save_data, f'{PATH}riskaware_{key_value}.joblib', w_range, w_trials
     )
 
-    process_and_plot(prob_err_ln, indx_err_ln, obj_n, obj_ln, 'lw', PATH, key_value)
-    process_and_plot(prob_err_lu, indx_err_lu, obj_u, obj_lu, 'ln', PATH, key_value)
-    process_and_plot(prob_err_lr, indx_err_lr, obj_r, obj_lr, 'ls', PATH, key_value)
+    process_and_plot(prob_err_ln, indx_err_ln, obj_n, obj_ln, 'ln', PATH, key_value)
+    process_and_plot(prob_err_lu, indx_err_lu, obj_u, obj_lu, 'lu', PATH, key_value)
+    process_and_plot(prob_err_lr, indx_err_lr, obj_r, obj_lr, 'lr', PATH, key_value)
 
-    reg_lu, creg_lu, bounds_lu = compute_bounds(obj_r, obj_lu)
-    plot_data(creg_lu, 'Episodes', 'Regret', f'{PATH}cumreg_lu_{key_value}.png')
-    plot_data(creg_lu, 'Episodes', 'Regret', f'{PATH}cumregbounds_lu_{key_value}.png', fill_bounds=bounds_lu)
-    plot_data(reg_lu, 'Episodes', 'Regret/K', f'{PATH}reg_lu_{key_value}.png')
+    reg_lru, creg_lru, bounds_lru = compute_bounds(obj_r, obj_lu)
+    plot_data(creg_lru, 'Episodes', 'Regret', f'{PATH}cumreg_lru_{key_value}.png')
+    plot_data(creg_lru, 'Episodes', 'Regret', f'{PATH}cumregbounds_lru_{key_value}.png', fill_bounds=bounds_lru)
+    plot_data(reg_lru, 'Episodes', 'Regret/K', f'{PATH}reg_lru_{key_value}.png')
 
-    reg_ln, creg_ln, bounds_ln = compute_bounds(obj_r, obj_ln)
-    plot_data(creg_ln, 'Episodes', 'Regret', f'{PATH}cumreg_ln_{key_value}.png')
-    plot_data(creg_ln, 'Episodes', 'Regret', f'{PATH}cumregbounds_ln_{key_value}.png', fill_bounds=bounds_ln)
-    plot_data(reg_ln, 'Episodes', 'Regret/K', f'{PATH}reg_ln_{key_value}.png')
+    reg_lrn, creg_lrn, bounds_lrn = compute_bounds(obj_r, obj_ln)
+    plot_data(creg_lrn, 'Episodes', 'Regret', f'{PATH}cumreg_lrn_{key_value}.png')
+    plot_data(creg_lrn, 'Episodes', 'Regret', f'{PATH}cumregbounds_lrn_{key_value}.png', fill_bounds=bounds_lrn)
+    plot_data(reg_lrn, 'Episodes', 'Regret/K', f'{PATH}reg_lrn_{key_value}.png')
 
 
 def plot_data(y_data, xlabel, ylabel, filename, x_data=None, ylim=None, linewidth=4, fill_bounds=None):

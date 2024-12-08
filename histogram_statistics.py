@@ -4,7 +4,7 @@ import pandas as pd
 
 if __name__ == '__main__':
 
-    df = pd.read_excel('./planning-finite/planning_results.xlsx')
+    df = pd.read_excel('./planning-finite/res.xlsx')
     target_labels = ['MEAN-Ri_riskaware_to_neutral', 'MEAN-Ri_rewutility_to_neutral'] 
     
     for target_label in target_labels:
