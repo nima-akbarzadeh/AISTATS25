@@ -91,7 +91,7 @@ def run_learning_combination(params):
 
     if tt == 'structured':
         prob_remain = numpy.round(numpy.linspace(0.1 / ns, 0.1 / ns, na), 2)
-    elif tt == 11:
+    elif tt == 'clinical1':
         pr_ss_0 = np.round(np.linspace(0.596, 0.690, na), 3)
         np.random.shuffle(pr_ss_0)
         pr_sr_0 = np.round(np.linspace(0.045, 0.061, na), 3)
@@ -118,7 +118,7 @@ def run_learning_combination(params):
         np.random.shuffle(pr_pp_1)
         prob_remain = [pr_ss_0, pr_sr_0, pr_sp_0, pr_rr_0, pr_rp_0, pr_pp_0, pr_ss_1, pr_sr_1, pr_sp_1, pr_rr_1, pr_rp_1, pr_pp_1]
         ns=4
-    elif tt == 12:
+    elif tt == 'clinical2':
         pr_ss_0 = np.round(np.linspace(0.668, 0.738, na), 3)
         np.random.shuffle(pr_ss_0)
         pr_sr_0 = np.round(np.linspace(0.045, 0.061, na), 3)
@@ -137,7 +137,7 @@ def run_learning_combination(params):
         np.random.shuffle(pr_pp_1)
         prob_remain = [pr_ss_0, pr_sr_0, pr_rr_0, pr_pp_0, pr_ss_1, pr_sr_1, pr_rr_1, pr_pp_1]
         ns=4
-    elif tt == 13:
+    elif tt == 'clinical3':
         pr_ss_0 = np.round(np.linspace(0.657, 0.762, na), 3)
         np.random.shuffle(pr_ss_0)
         pr_sp_0 = np.round(np.linspace(0.201, 0.287, na), 3)
@@ -152,7 +152,7 @@ def run_learning_combination(params):
         np.random.shuffle(pr_pp_1)
         prob_remain = [pr_ss_0, pr_sp_0, pr_pp_0, pr_ss_1, pr_sp_1, pr_pp_1]
         ns=3
-    elif tt == 14:
+    elif tt == 'clinical4':
         pr_ss_0 = np.round(np.linspace(0.713, 0.799, na), 3)
         np.random.shuffle(pr_ss_0)
         pr_pp_0 = np.round(np.linspace(0.882, 0.922, na), 3)
@@ -169,23 +169,22 @@ def run_learning_combination(params):
     key_value = f'nt{nt}_ns{ns}_na{na}_tt{tt}_ut{ut}_th{th}_nc{nc}'
     rew_vals = rewards(nt, na, ns)
     rew_utility_vals = rewards_utility(nt, na, ns, th, ut[0], ut[1])
-    prob_remain = numpy.round(numpy.linspace(0.1 / ns, 1 / ns, na), 2)
     markov_matrix = get_transitions(na, ns, prob_remain, tt)
     initial_states = (ns - 1) * numpy.ones(na, dtype=numpy.int32)
-    w_range = 2*nt
-    w_trials = nt*ns*na
+    w_range = nt
+    w_trials = nt*ns
 
     prob_err_ln, indx_err_ln, _, obj_ln, _, obj_n = multiprocess_learn_LRNPTS(
         n_iterations, l_episodes, n_episodes, nt, ns, na, nc, th, rew_vals, markov_matrix, initial_states, ut[0], ut[1], 
-        save_data, w_range, w_trials, f'{PATH}neutral_{key_value}.joblib'
+        save_data, f'{PATH}neutral_{key_value}.joblib', w_range, w_trials
     )
     prob_err_lu, indx_err_lu, _, obj_lu, _, obj_u = multiprocess_learn_LRNPTS(
         n_iterations, l_episodes, n_episodes, nt, ns, na, nc, th, rew_utility_vals, markov_matrix, initial_states, ut[0], ut[1], 
-        save_data, w_range, w_trials, f'{PATH}rewutility_{key_value}.joblib'
+        save_data, f'{PATH}rewutility_{key_value}.joblib', w_range, w_trials
     )
     prob_err_lr, indx_err_lr, _, obj_lr, _, obj_r = multiprocess_learn_LRAPTS(
         n_iterations, l_episodes, n_episodes, nt, ns, na, nc, th, rew_vals, markov_matrix, initial_states, ut[0], ut[1], 
-        save_data, w_range, w_trials, f'{PATH}riskaware_{key_value}.joblib'
+        save_data, f'{PATH}riskaware_{key_value}.joblib', w_range, w_trials
     )
 
     process_and_plot(prob_err_ln, indx_err_ln, obj_n, obj_ln, 'lw', PATH, key_value)

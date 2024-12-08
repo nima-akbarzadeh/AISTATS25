@@ -9,7 +9,7 @@ import time
 
 
 def process_learn_LRAPTS_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew, true_dyn, initial_states, u_type, u_order, 
-                                   w_range, w_trials, PlanW):
+                                   PlanW, w_range, w_trials):
 
     # Initialization
     print(f"Iteration {i} starts ...")
@@ -70,7 +70,7 @@ def multiprocess_learn_LRAPTS(
 
     # Define arguments for each iteration
     args = [
-        (i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew,  true_dyn, initial_states, u_type, u_order, PlanW) 
+        (i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew,  true_dyn, initial_states, u_type, u_order, PlanW, w_range, w_trials) 
         for i in range(n_iterations)
     ]
 
@@ -93,7 +93,7 @@ def multiprocess_learn_LRAPTS(
 
 
 def process_learn_LRNPTS_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew, true_dyn, initial_states, u_type, u_order, 
-                                   w_range, w_trials, PlanW):
+                                   PlanW, w_range, w_trials):
 
     # Initialization
     print(f"Iteration {i} starts ...")
@@ -149,12 +149,12 @@ def multiprocess_learn_LRNPTS(
         ):
     num_workers = cpu_count() - 1
 
-    PlanW = Whittle(n_states, n_arms, true_rew,  true_dyn, n_steps)
+    PlanW = Whittle(n_states, n_arms, true_rew, true_dyn, n_steps)
     PlanW.get_indices(w_range, w_trials)
 
     # Define arguments for each iteration
     args = [
-        (i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew,  true_dyn, initial_states, u_type, u_order, PlanW) 
+        (i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew,  true_dyn, initial_states, u_type, u_order, PlanW, w_range, w_trials) 
         for i in range(n_iterations)
     ]
 

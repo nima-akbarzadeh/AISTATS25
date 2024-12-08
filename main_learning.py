@@ -4,12 +4,12 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-def main():
+def main(ns, tt):
     param_sets = {
         'n_steps': [5],
-        'n_states': [4],
+        'n_states': [ns],
         'n_arms': [5],
-        'transition_type': ['structured'],
+        'transition_type': [tt],
         'utility_functions': [(1, 0)],
         'thresholds': [0.5],
         'arm_choices': [1]
@@ -40,4 +40,7 @@ def main():
         run_learning_combination(params)
 
 if __name__ == '__main__':
-    main()
+    main(4, 'clinical1')
+    main(4, 'clinical2')
+    main(4, 'structured')
+    main(5, 'structured')
