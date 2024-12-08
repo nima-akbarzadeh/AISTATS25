@@ -14,9 +14,7 @@ class Whittle:
         self.digits = 3
         self.whittle_indices = []
 
-    def get_indices(self):
-        index_range = 2*self.horizon
-        n_trials = self.horizon*self.num_x*self.num_arms
+    def get_indices(self, index_range, n_trials):
         l_steps = index_range / n_trials
         self.binary_search(0, index_range, l_steps)
 
@@ -142,9 +140,7 @@ class RiskAwareWhittle:
 
         self.whittle_indices = []
 
-    def get_indices(self):
-        index_range = 2*self.horizon
-        n_trials = self.horizon*self.num_x*self.num_arms
+    def get_indices(self, index_range, n_trials):
         l_steps = index_range / n_trials
         self.binary_search(0, index_range, l_steps)
 

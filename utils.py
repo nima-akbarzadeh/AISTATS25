@@ -51,13 +51,13 @@ def run_a_planning_combination(params):
     markov_matrix = get_transitions(na, ns, prob_remain, 'structured')
 
     Neutral_Whittle = Whittle(ns, na, rew_vals, markov_matrix, nt)
-    Neutral_Whittle.get_indices()
+    Neutral_Whittle.get_indices(2*nt, nt*ns*na)
 
     Utility_Whittle = Whittle(ns, na, rew_utility_vals, markov_matrix, nt)
-    Utility_Whittle.get_indices()
+    Utility_Whittle.get_indices(2*nt, nt*ns*na)
 
     RiskAware_Whittle = RiskAwareWhittle(ns, na, rew_vals, markov_matrix, nt, ut[0], ut[1], th)
-    RiskAware_Whittle.get_indices()
+    RiskAware_Whittle.get_indices(2*nt, nt*ns*na)
 
     nch = max(1, int(round(fr * na)))
     initial_states = (ns - 1) * numpy.ones(na, dtype=numpy.int32)
@@ -170,17 +170,22 @@ def run_learning_combination(params):
     rew_vals = rewards(nt, na, ns)
     rew_utility_vals = rewards_utility(nt, na, ns, th, ut[0], ut[1])
     prob_remain = numpy.round(numpy.linspace(0.1 / ns, 1 / ns, na), 2)
-    markov_matrix = get_transitions(na, ns, prob_remain, 'structured')
+    markov_matrix = get_transitions(na, ns, prob_remain, tt)
     initial_states = (ns - 1) * numpy.ones(na, dtype=numpy.int32)
+    w_range = 2*nt
+    w_trials = nt*ns*na
 
     prob_err_ln, indx_err_ln, _, obj_ln, _, obj_n = multiprocess_learn_LRNPTS(
-        n_iterations, l_episodes, n_episodes, nt, ns, na, nc, th, rew_vals, markov_matrix, initial_states, ut[0], ut[1], save_data, f'{PATH}neutral_{key_value}.joblib'
+        n_iterations, l_episodes, n_episodes, nt, ns, na, nc, th, rew_vals, markov_matrix, initial_states, ut[0], ut[1], 
+        save_data, w_range, w_trials, f'{PATH}neutral_{key_value}.joblib'
     )
     prob_err_lu, indx_err_lu, _, obj_lu, _, obj_u = multiprocess_learn_LRNPTS(
-        n_iterations, l_episodes, n_episodes, nt, ns, na, nc, th, rew_utility_vals, markov_matrix, initial_states, ut[0], ut[1], save_data, f'{PATH}rewutility_{key_value}.joblib'
+        n_iterations, l_episodes, n_episodes, nt, ns, na, nc, th, rew_utility_vals, markov_matrix, initial_states, ut[0], ut[1], 
+        save_data, w_range, w_trials, f'{PATH}rewutility_{key_value}.joblib'
     )
     prob_err_lr, indx_err_lr, _, obj_lr, _, obj_r = multiprocess_learn_LRAPTS(
-        n_iterations, l_episodes, n_episodes, nt, ns, na, nc, th, rew_vals, markov_matrix, initial_states, ut[0], ut[1], save_data, f'{PATH}riskaware_{key_value}.joblib'
+        n_iterations, l_episodes, n_episodes, nt, ns, na, nc, th, rew_vals, markov_matrix, initial_states, ut[0], ut[1], 
+        save_data, w_range, w_trials, f'{PATH}riskaware_{key_value}.joblib'
     )
 
     process_and_plot(prob_err_ln, indx_err_ln, obj_n, obj_ln, 'lw', PATH, key_value)

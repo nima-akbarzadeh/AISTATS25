@@ -8,7 +8,8 @@ import joblib
 import time
 
 
-def process_learn_LRAPTS_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew, true_dyn, initial_states, u_type, u_order, PlanW):
+def process_learn_LRAPTS_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew, true_dyn, initial_states, u_type, u_order, 
+                                   w_range, w_trials, PlanW):
 
     # Initialization
     print(f"Iteration {i} starts ...")
@@ -29,7 +30,7 @@ def process_learn_LRAPTS_iteration(i, l_episodes, n_episodes, n_steps, n_states,
             for act in range(2):
                 est_transitions[s1, :, act, a] = dirichlet.rvs(np.ones(n_states))
     LearnW = RiskAwareWhittle(n_states, n_arms, true_rew, est_transitions, n_steps, u_type, u_order, threshold)
-    LearnW.get_indices()
+    LearnW.get_indices(w_range, w_trials)
     counts = np.ones((n_states, n_states, 2, n_arms))
 
     for l in range(l_episodes):
@@ -44,27 +45,28 @@ def process_learn_LRAPTS_iteration(i, l_episodes, n_episodes, n_steps, n_states,
                 for act in range(2):
                     est_transitions[s1, :, act, a] = dirichlet.rvs(counts[s1, :, act, a])
         LearnW = RiskAwareWhittle(n_states, n_arms, true_rew, est_transitions, n_steps, u_type, u_order, threshold)
-        LearnW.get_indices()
+        LearnW.get_indices(w_range, w_trials)
 
         for a in range(n_arms):
             results["learn_transitionerrors"][l, a] = np.max(np.abs(est_transitions[:, :, :, a] - true_dyn[:, :, :, a]))
             results["learn_indexerrors"][l, a] = np.max(np.abs(LearnW.whittle_indices[a] - PlanW.whittle_indices[a]))
-            results["plan_rewards"][l, a] = np.round(np.mean(plan_totalrewards[a, :]), 2)
-            results["plan_objectives"][l, a] = np.round(np.mean(plan_objectives[a, :]), 2)
-            results["learn_rewards"][l, a] = np.round(np.mean(learn_totalrewards[a, :]), 2)
-            results["learn_objectives"][l, a] = np.round(np.mean(learn_objectives[a, :]), 2)
+            results["plan_rewards"][l, a] = np.mean(plan_totalrewards[a, :])
+            results["plan_objectives"][l, a] = np.mean(plan_objectives[a, :])
+            results["learn_rewards"][l, a] = np.mean(learn_totalrewards[a, :])
+            results["learn_objectives"][l, a] = np.mean(learn_objectives[a, :])
 
     print(f"Iteration {i} end with duration: {time.time() - start_time}")
     return results
 
 
 def multiprocess_learn_LRAPTS(
-        n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew,  true_dyn, initial_states, u_type, u_order, save_data, filename
+        n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew, 
+        true_dyn, initial_states, u_type, u_order, save_data, filename, w_range, w_trials
         ):
     num_workers = cpu_count() - 1
 
     PlanW = RiskAwareWhittle(n_states, n_arms, true_rew,  true_dyn, n_steps, u_type, u_order, threshold)
-    PlanW.get_indices()
+    PlanW.get_indices(w_range, w_trials)
 
     # Define arguments for each iteration
     args = [
@@ -90,7 +92,8 @@ def multiprocess_learn_LRAPTS(
     return all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives, all_plan_rewards, all_plan_objectives
 
 
-def process_learn_LRNPTS_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew, true_dyn, initial_states, u_type, u_order, PlanW):
+def process_learn_LRNPTS_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew, true_dyn, initial_states, u_type, u_order, 
+                                   w_range, w_trials, PlanW):
 
     # Initialization
     print(f"Iteration {i} starts ...")
@@ -111,7 +114,7 @@ def process_learn_LRNPTS_iteration(i, l_episodes, n_episodes, n_steps, n_states,
             for act in range(2):
                 est_transitions[s1, :, act, a] = dirichlet.rvs(np.ones(n_states))
     LearnW = Whittle(n_states, n_arms, true_rew, est_transitions, n_steps)
-    LearnW.get_indices()
+    LearnW.get_indices(w_range, w_trials)
     counts = np.ones((n_states, n_states, 2, n_arms))
 
     for l in range(l_episodes):
@@ -126,27 +129,28 @@ def process_learn_LRNPTS_iteration(i, l_episodes, n_episodes, n_steps, n_states,
                 for act in range(2):
                     est_transitions[s1, :, act, a] = dirichlet.rvs(counts[s1, :, act, a])
         LearnW = Whittle(n_states, n_arms, true_rew, est_transitions, n_steps)
-        LearnW.get_indices()
+        LearnW.get_indices(w_range, w_trials)
 
         for a in range(n_arms):
             results["learn_transitionerrors"][l, a] = np.max(np.abs(est_transitions[:, :, :, a] - true_dyn[:, :, :, a]))
             results["learn_indexerrors"][l, a] = np.max(np.abs(LearnW.whittle_indices[a] - PlanW.whittle_indices[a]))
-            results["plan_rewards"][l, a] = np.round(np.mean(plan_totalrewards[a, :]), 2)
-            results["plan_objectives"][l, a] = np.round(np.mean(plan_objectives[a, :]), 2)
-            results["learn_rewards"][l, a] = np.round(np.mean(learn_totalrewards[a, :]), 2)
-            results["learn_objectives"][l, a] = np.round(np.mean(learn_objectives[a, :]), 2)
+            results["plan_rewards"][l, a] = np.mean(plan_totalrewards[a, :])
+            results["plan_objectives"][l, a] = np.mean(plan_objectives[a, :])
+            results["learn_rewards"][l, a] = np.mean(learn_totalrewards[a, :])
+            results["learn_objectives"][l, a] = np.mean(learn_objectives[a, :])
 
     print(f"Iteration {i} end with duration: {time.time() - start_time}")
     return results
 
 
 def multiprocess_learn_LRNPTS(
-        n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew,  true_dyn, initial_states, u_type, u_order, save_data, filename
+        n_iterations, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew, 
+        true_dyn, initial_states, u_type, u_order, save_data, filename, w_range, w_trials
         ):
     num_workers = cpu_count() - 1
 
     PlanW = Whittle(n_states, n_arms, true_rew,  true_dyn, n_steps)
-    PlanW.get_indices()
+    PlanW.get_indices(w_range, w_trials)
 
     # Define arguments for each iteration
     args = [
