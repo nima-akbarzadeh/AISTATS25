@@ -4,7 +4,7 @@ import pandas as pd
 
 if __name__ == '__main__':
 
-    base_path = './planning'
+    base_path = './planning-finite'
     file_name = 'res.xlsx'
     df = pd.read_excel(f'{base_path}/{file_name}')
     print(df.keys())
