@@ -1,4 +1,3 @@
-import random
 import numpy as np
 
 
@@ -14,15 +13,15 @@ def compute_utility(total_reward, threshold, u_type, u_order):
         return (1 + np.exp(-u_order * (1 - threshold))) / (1 + np.exp(-u_order * (total_reward - threshold)))
 
 
-def process_neutral_whittle(nWhittle, n_iterations, n_steps, n_states, n_arms, n_choices, threshold, rewards, transitions, initial_states, u_type, u_order):
+def process_neutral_whittle(Whittle, n_iterations, n_steps, n_states, n_arms, n_choices, 
+                            threshold, rewards, transitions, initial_states, u_type, u_order):
 
-    ##################################################### Process
     totalrewards = np.zeros((n_arms, n_iterations))
     objectives = np.zeros((n_arms, n_iterations))
     for k in range(n_iterations):
         states = initial_states.copy()
         for t in range(n_steps):
-            actions = nWhittle.take_action(n_choices, states, t)
+            actions = Whittle.take_action(n_choices, states, t)
             for a in range(n_arms):
                 totalrewards[a, k] += rewards[states[a], a]
                 states[a] = np.random.choice(n_states, p=transitions[states[a], :, actions[a], a])
@@ -32,7 +31,8 @@ def process_neutral_whittle(nWhittle, n_iterations, n_steps, n_states, n_arms, n
     return totalrewards, objectives
 
 
-def process_neutral_whittle_learning(nWhittle, nWhittle_learn, n_iterations, n_steps, n_states, n_arms, n_choices, threshold, rewards, transitions, initial_states, u_type, u_order):
+def process_neutral_whittle_learning(Whittle, Whittle_learn, n_iterations, n_steps, n_states, n_arms, n_choices, 
+                                     threshold, rewards, transitions, initial_states, u_type, u_order):
     totalrewards = np.zeros((n_arms, n_iterations))
     objectives = np.zeros((n_arms, n_iterations))
     learn_totalrewards = np.zeros((n_arms, n_iterations))
@@ -42,8 +42,8 @@ def process_neutral_whittle_learning(nWhittle, nWhittle_learn, n_iterations, n_s
         states = initial_states.copy()
         learn_states = initial_states.copy()
         for t in range(n_steps):
-            actions = nWhittle.take_action(n_choices, states, t)
-            learn_actions = nWhittle_learn.take_action(n_choices, learn_states, t)
+            actions = Whittle.take_action(n_choices, states, t)
+            learn_actions = Whittle_learn.take_action(n_choices, learn_states, t)
             _learn_states = np.copy(learn_states)
             for a in range(n_arms):
                 totalrewards[a, k] += rewards[states[a], a]
@@ -58,19 +58,19 @@ def process_neutral_whittle_learning(nWhittle, nWhittle_learn, n_iterations, n_s
     return totalrewards, objectives, learn_totalrewards, learn_objectives, counts
 
 
-def process_riskaware_whittle(rWhittle, n_iterations, n_steps, n_states, n_arms, n_choices, threshold, rewards, transitions, initial_states, u_type, u_order):
+def process_riskaware_whittle(raWhittle, n_iterations, n_steps, n_states, n_arms, n_choices, 
+                              threshold, rewards, transitions, initial_states, u_type, u_order):
 
-    ##################################################### Process
     totalrewards = np.zeros((n_arms, n_iterations))
     objectives = np.zeros((n_arms, n_iterations))
     for k in range(n_iterations):
         lifted = np.zeros(n_arms, dtype=np.int32)
         states = initial_states.copy()
         for t in range(n_steps):
-            actions = rWhittle.take_action(n_choices, lifted, states, t)
+            actions = raWhittle.take_action(n_choices, lifted, states, t)
             for a in range(n_arms):
                 totalrewards[a, k] += rewards[states[a], a]
-                lifted[a] = max(0, min(rWhittle.n_augment[a]-1, lifted[a] + states[a]))
+                lifted[a] = max(0, min(raWhittle.n_augment[a]-1, lifted[a] + states[a]))
                 states[a] = np.random.choice(n_states, p=transitions[states[a], :, actions[a], a])
         for a in range(n_arms):
             objectives[a, k] = compute_utility(totalrewards[a, k], threshold, u_type, u_order)
@@ -78,7 +78,8 @@ def process_riskaware_whittle(rWhittle, n_iterations, n_steps, n_states, n_arms,
     return totalrewards, objectives
 
 
-def process_riskaware_whittle_learning(rWhittle, rWhittle_learn, n_iterations, n_steps, n_states, n_arms, n_choices, threshold, rewards, transitions, initial_states, u_type, u_order):
+def process_riskaware_whittle_learning(raWhittle, raWhittle_learn, n_iterations, n_steps, n_states, n_arms, 
+                                       n_choices, threshold, rewards, transitions, initial_states, u_type, u_order):
     totalrewards = np.zeros((n_arms, n_iterations))
     objectives = np.zeros((n_arms, n_iterations))
     learn_totalrewards = np.zeros((n_arms, n_iterations))
@@ -90,15 +91,15 @@ def process_riskaware_whittle_learning(rWhittle, rWhittle_learn, n_iterations, n
         learn_lifted = np.zeros(n_arms, dtype=np.int32)
         learn_states = initial_states.copy()
         for t in range(n_steps):
-            actions = rWhittle.take_action(n_choices, lifted, states, t)
-            learn_actions = rWhittle_learn.take_action(n_choices, learn_lifted, learn_states, t)
+            actions = raWhittle.take_action(n_choices, lifted, states, t)
+            learn_actions = raWhittle_learn.take_action(n_choices, learn_lifted, learn_states, t)
             _learn_states = np.copy(learn_states)
             for a in range(n_arms):
                 totalrewards[a, k] += rewards[states[a], a]
-                lifted[a] = max(0, min(rWhittle.n_augment[a]-1, lifted[a] + states[a]))
+                lifted[a] = max(0, min(raWhittle.n_augment[a]-1, lifted[a] + states[a]))
                 states[a] = np.random.choice(n_states, p=transitions[states[a], :, actions[a], a])
                 learn_totalrewards[a, k] += rewards[learn_states[a], a]
-                learn_lifted[a] = max(0, min(rWhittle_learn.n_augment[a]-1, learn_lifted[a] + learn_states[a]))
+                learn_lifted[a] = max(0, min(raWhittle_learn.n_augment[a]-1, learn_lifted[a] + learn_states[a]))
                 learn_states[a] = np.random.choice(n_states, p=transitions[learn_states[a], :, learn_actions[a], a])
                 counts[_learn_states[a], learn_states[a], learn_actions[a], a] += 1
         for a in range(n_arms):
@@ -107,21 +108,3 @@ def process_riskaware_whittle_learning(rWhittle, rWhittle_learn, n_iterations, n
 
     return totalrewards, objectives, learn_totalrewards, learn_objectives, counts
 
-
-def process_Random(n_iterations, n_steps, n_states, n_arms, n_choices, threshold, rewards, transitions, initial_states, u_type, u_order):
-
-    ##################################################### Process
-    totalrewards = np.zeros((n_arms, n_iterations))
-    objectives = np.zeros((n_arms, n_iterations))
-    for k in range(n_iterations):
-        states = initial_states.copy()
-        for _ in range(n_steps):
-            selected_indices = random.sample(range(n_arms), n_choices)
-            actions = [1 if i in selected_indices else 0 for i in range(n_arms)]
-            for a in range(n_arms):
-                totalrewards[a, k] += rewards[states[a], a]
-                states[a] = np.random.choice(n_states, p=transitions[states[a], :, actions[a], a])
-        for a in range(n_arms):
-            objectives[a, k] = compute_utility(totalrewards[a, k], threshold, u_type, u_order)
-
-    return totalrewards, objectives, _

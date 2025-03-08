@@ -9,10 +9,10 @@ def rewards(time_horizon, num_arms, num_states):
     Calculate rewards for each arm.
     """
     vals = np.ones((num_states, num_arms))
-    for a in range(num_arms):
-        vals[:, a] = np.linspace(0, num_states-1, num=num_states) / (num_states-1)
-    return np.round(vals / time_horizon, 3)
-
+    per_step_rewards = np.linspace(0, num_states-1, num=num_states) / (num_states-1)
+    for x, per_step_reward in enumerate(per_step_rewards):
+        vals[x, :] = np.round(per_step_reward / time_horizon, 3) * np.ones(num_arms)
+    return vals
 
 # Define the reward rewards for each arm
 def rewards_utility(time_horizon, num_arms, num_states, threshold, u_type, u_order):
@@ -20,16 +20,14 @@ def rewards_utility(time_horizon, num_arms, num_states, threshold, u_type, u_ord
     Calculate a utility function of the rewards for each arm.
     """
     vals = np.ones((num_states, num_arms))
-    total_rewards = np.linspace(0, num_states-1, num=num_states) / (num_states-1)
-    for x, total_reward in enumerate(total_rewards):
-        vals[x, :] = compute_utility(total_reward, threshold, u_type, u_order) * np.ones(num_arms)
-    return np.round(vals / time_horizon, 3)
-
+    per_step_rewards = np.linspace(0, num_states-1, num=num_states) / (num_states-1)
+    for x, per_step_reward in enumerate(per_step_rewards):
+        vals[x, :] = np.round(compute_utility(per_step_reward, threshold, u_type, u_order) / time_horizon, 3) * np.ones(num_arms)
+    return vals
 
 def ceil_to_decimals(arr, decimals):
     factor = 10 ** decimals
     return np.floor(arr * factor) / factor
-
 
 # Define the Markov dynamics for each arm
 def get_transitions(num_arms: int, num_states: int, prob_remain, transition_type):

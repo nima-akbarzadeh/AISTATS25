@@ -70,7 +70,7 @@ def multiprocess_learn_LRAPTS(
 
     # Define arguments for each iteration
     args = [
-        (i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew,  true_dyn, initial_states, u_type, u_order, PlanW, w_range, w_trials) 
+        (i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew, true_dyn, initial_states, u_type, u_order, PlanW, w_range, w_trials) 
         for i in range(n_iterations)
     ]
 
@@ -92,8 +92,8 @@ def multiprocess_learn_LRAPTS(
     return all_learn_transitionerrors, all_learn_indexerrors, all_learn_rewards, all_learn_objectives, all_plan_rewards, all_plan_objectives
 
 
-def process_learn_LRNPTS_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew, true_dyn, initial_states, u_type, u_order, 
-                                   PlanW, w_range, w_trials):
+def process_learn_LRNPTS_iteration(i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, 
+                                   true_rew, true_dyn, initial_states, u_type, u_order, PlanW, w_range, w_trials):
 
     # Initialization
     print(f"Iteration {i} starts ...")
@@ -154,7 +154,7 @@ def multiprocess_learn_LRNPTS(
 
     # Define arguments for each iteration
     args = [
-        (i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew,  true_dyn, initial_states, u_type, u_order, PlanW, w_range, w_trials) 
+        (i, l_episodes, n_episodes, n_steps, n_states, n_arms, n_choices, threshold, true_rew, true_dyn, initial_states, u_type, u_order, PlanW, w_range, w_trials) 
         for i in range(n_iterations)
     ]
 

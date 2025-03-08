@@ -22,7 +22,7 @@ The project includes two main simulation modules and several supporting scripts:
 
 - **`Markov.py`**  
   Defines reward structures and dynamics for arms:
-  - Linear and non-linear reward models.
+  - Reward functions.
   - Transition dynamics for Markov decision processes for either the structured or real-world models.
 
 - **`processes.py`**  
